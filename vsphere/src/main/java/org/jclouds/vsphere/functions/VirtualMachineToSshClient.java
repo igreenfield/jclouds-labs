@@ -60,7 +60,8 @@ public class VirtualMachineToSshClient implements Function<VirtualMachine, SshCl
         String clientIpAddress = vm.getGuest().getIpAddress();
         String sshPort = "22";
         while (!vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || clientIpAddress.isEmpty()) {
-            int timeoutValue = 1000, timeoutUnits = 500;
+            int timeoutValue = 1000;
+            int timeoutUnits = 500;
             Predicate<String> tester = Predicates2.retry(
                     ipAddressTester, timeoutValue, timeoutUnits,
                     TimeUnit.MILLISECONDS);

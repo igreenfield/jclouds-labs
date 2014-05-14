@@ -16,6 +16,7 @@
 package org.jclouds.vsphere.functions;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.vmware.vim25.FileFault;
 import com.vmware.vim25.InvalidName;
@@ -83,17 +84,6 @@ public class MasterToVirtualMachineCloneSpec implements Function<VirtualMachine,
     private VirtualMachineCloneSpec prepareCloneSpec(VirtualMachine master, ResourcePool resourcePool, Datastore datastore) {
         VirtualMachineRelocateSpec relocateSpec = null;
         VirtualMachineCloneSpec cloneSpec = null;
-
-        //VirtualMachineSnapshot currentSnapshot = null;
-
-//        try {
-//            currentSnapshot = checkNotNull(
-//                    getCurrentSnapshotOrCreate(VSPHERE_SNAPSHOT_NAME, VSPHERE_SNAPSHOT_DESCRITPION, master),
-//                    "currentSnapshot");
-//        } catch (Exception e) {
-//            logger.error("Can't get current snapshot of the master " + master.getName(), e);
-//            throw propagate(e);
-//        }
 
         try {
             relocateSpec = checkNotNull(configureRelocateSpec(resourcePool, datastore, master), "relocateSpec");
@@ -173,7 +163,7 @@ public class MasterToVirtualMachineCloneSpec implements Function<VirtualMachine,
     }
 
     private static ArrayList<Integer> getIndependentVirtualDiskKeys(VirtualMachine vm) throws Exception {
-        ArrayList<Integer> diskKeys = new ArrayList<Integer>();
+        ArrayList<Integer> diskKeys = Lists.newArrayList();
 
         VirtualDevice[] devices = (VirtualDevice[]) vm.getPropertyByPath("config.hardware.device");
 

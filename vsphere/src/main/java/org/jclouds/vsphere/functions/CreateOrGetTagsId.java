@@ -17,6 +17,7 @@ package org.jclouds.vsphere.functions;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closer;
 import com.vmware.vim25.CustomFieldDef;
 import org.jclouds.compute.reference.ComputeServiceConstants;
@@ -29,7 +30,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -43,7 +43,7 @@ public class CreateOrGetTagsId implements Supplier<Map<String, CustomFieldDef>> 
     protected Logger logger = Logger.NULL;
 
     private final Supplier<VSphereServiceInstance> serviceInstance;
-    private Map<String, CustomFieldDef> customFieldDefMap = new HashMap<String, CustomFieldDef>();
+    private Map<String, CustomFieldDef> customFieldDefMap = Maps.newHashMap();
 
     @Inject
     public CreateOrGetTagsId(Supplier<VSphereServiceInstance> serviceInstance) {
