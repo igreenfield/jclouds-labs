@@ -39,7 +39,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-@Test(groups = "unit", testName = "ContextBuilderTest")
+//@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
     public void  testVsphereContext() throws RunNodesException {
         ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
