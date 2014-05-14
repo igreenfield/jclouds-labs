@@ -16,12 +16,22 @@
 
 package org.jclouds.vsphere.functions;
 
-import com.google.common.base.*;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.io.Closer;
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.vmware.vim25.*;
+import com.vmware.vim25.CustomFieldDef;
+import com.vmware.vim25.CustomFieldStringValue;
+import com.vmware.vim25.CustomFieldValue;
+import com.vmware.vim25.GuestNicInfo;
+import com.vmware.vim25.VirtualMachinePowerState;
+import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.VirtualMachine;

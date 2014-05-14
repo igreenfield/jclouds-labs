@@ -19,13 +19,52 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
-import com.google.common.collect.*;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-import com.vmware.vim25.*;
-import com.vmware.vim25.mo.*;
+import com.vmware.vim25.CustomFieldDef;
+import com.vmware.vim25.Description;
+import com.vmware.vim25.GuestNicInfo;
+import com.vmware.vim25.GuestProcessInfo;
+import com.vmware.vim25.GuestProgramSpec;
+import com.vmware.vim25.NamePasswordAuthentication;
+import com.vmware.vim25.TaskInProgress;
+import com.vmware.vim25.VirtualDevice;
+import com.vmware.vim25.VirtualDeviceConfigSpec;
+import com.vmware.vim25.VirtualDeviceConfigSpecFileOperation;
+import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
+import com.vmware.vim25.VirtualDisk;
+import com.vmware.vim25.VirtualDiskFlatVer2BackingInfo;
+import com.vmware.vim25.VirtualEthernetCard;
+import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
+import com.vmware.vim25.VirtualLsiLogicController;
+import com.vmware.vim25.VirtualMachineCloneSpec;
+import com.vmware.vim25.VirtualMachineConfigSpec;
+import com.vmware.vim25.VirtualMachinePowerState;
+import com.vmware.vim25.VirtualMachineToolsStatus;
+import com.vmware.vim25.VirtualPCNet32;
+import com.vmware.vim25.mo.Folder;
+import com.vmware.vim25.mo.GuestAuthManager;
+import com.vmware.vim25.mo.GuestOperationsManager;
+import com.vmware.vim25.mo.GuestProcessManager;
+import com.vmware.vim25.mo.HostSystem;
+import com.vmware.vim25.mo.InventoryNavigator;
+import com.vmware.vim25.mo.ManagedEntity;
+import com.vmware.vim25.mo.ResourcePool;
+import com.vmware.vim25.mo.Task;
+import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.callables.RunScriptOnNode;
-import org.jclouds.compute.domain.*;
+import org.jclouds.compute.domain.Hardware;
+import org.jclouds.compute.domain.HardwareBuilder;
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.Processor;
+import org.jclouds.compute.domain.Template;
+import org.jclouds.compute.domain.Volume;
+import org.jclouds.compute.domain.VolumeBuilder;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
@@ -49,7 +88,12 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -263,7 +307,7 @@ public class VSphereComputeServiceAdapter implements
 
     @Override
     public Iterable<VirtualMachine> listNodesByIds(Iterable<String> ids) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     @Override
