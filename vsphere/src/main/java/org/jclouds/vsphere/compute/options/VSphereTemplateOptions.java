@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 *
-* @author Izek Greenfield
+* based on Andrea Turli work.
 */
 package org.jclouds.vsphere.compute.options;
 
@@ -40,9 +40,9 @@ import static com.google.common.base.Strings.emptyToNull;
  * ComputeService client = // get connection
  * templateBuilder.options(inboundPorts(22, 80, 8080, 443));
  * Set<NodeMetadata> set = client.createNodesInGroup(tag, 2, templateBuilder.build());
- * <code>
+ * </code>
  *
- * @author Izek Greenfield
+ * based on Andrea Turli work.
  */
 public class VSphereTemplateOptions extends TemplateOptions implements Cloneable {
     @Override
@@ -63,6 +63,11 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
                 eTo.description(getDescription());
             if (getAddressType() != null)
                 eTo.addressType(getAddressType());
+            if (isoFileName() != null)
+                eTo.isoFileName(isoFileName());
+            if (flpFileName() != null)
+                eTo.flpFileName(flpFileName());
+            eTo.postConfiguration(postConfiguration());
         }
     }
 
@@ -70,6 +75,17 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
     private String customizationScript = null;
     private String addressType = null;
     private String datacenterName = null;
+    private String isoFileName = null;
+    private String flpFileName = null;
+    private boolean postConfiguration = true;
+
+    public boolean postConfiguration() {
+        return postConfiguration;
+    }
+
+    public void postConfiguration(boolean postConfiguration) {
+        this.postConfiguration = postConfiguration;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -128,6 +144,8 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
         this.datacenterName = datacenterName;
         return this;
     }
+
+
 
     public static class Builder {
         /**
@@ -292,6 +310,24 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
     @Override
     public VSphereTemplateOptions userMetadata(String key, String value) {
         return VSphereTemplateOptions.class.cast(super.userMetadata(key, value));
+    }
+
+    public String isoFileName() {
+        return isoFileName;
+    }
+
+    public VSphereTemplateOptions isoFileName(String isoFileName) {
+         this.isoFileName = isoFileName;
+        return this;
+    }
+
+    public String flpFileName() {
+        return flpFileName;
+    }
+
+    public VSphereTemplateOptions flpFileName(String flpFileName) {
+        this.flpFileName = flpFileName;
+        return this;
     }
 
     /**

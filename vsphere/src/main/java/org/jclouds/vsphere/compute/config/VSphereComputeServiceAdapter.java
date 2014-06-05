@@ -1,18 +1,21 @@
 /*
-* Copyright 2014 Cisco Systems, Inc
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.jclouds.vsphere.compute.config;
 
 import com.google.common.base.Function;
@@ -32,20 +35,27 @@ import com.vmware.vim25.GuestProcessInfo;
 import com.vmware.vim25.GuestProgramSpec;
 import com.vmware.vim25.NamePasswordAuthentication;
 import com.vmware.vim25.TaskInProgress;
+import com.vmware.vim25.VirtualCdrom;
+import com.vmware.vim25.VirtualCdromIsoBackingInfo;
 import com.vmware.vim25.VirtualDevice;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
 import com.vmware.vim25.VirtualDeviceConfigSpecFileOperation;
 import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
+import com.vmware.vim25.VirtualDeviceConnectInfo;
 import com.vmware.vim25.VirtualDisk;
 import com.vmware.vim25.VirtualDiskFlatVer2BackingInfo;
 import com.vmware.vim25.VirtualEthernetCard;
 import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
+import com.vmware.vim25.VirtualFloppy;
+import com.vmware.vim25.VirtualFloppyImageBackingInfo;
+import com.vmware.vim25.VirtualIDEController;
 import com.vmware.vim25.VirtualLsiLogicController;
 import com.vmware.vim25.VirtualMachineCloneSpec;
 import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.VirtualPCNet32;
+import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.GuestAuthManager;
 import com.vmware.vim25.mo.GuestOperationsManager;
@@ -101,7 +111,7 @@ import static com.google.common.base.Throwables.propagate;
 import static org.jclouds.vsphere.config.VSphereConstants.CLONING;
 
 /**
- * @author Izek Greenfield
+ * based on Andrea Turli work.
  */
 @Singleton
 public class VSphereComputeServiceAdapter implements
@@ -176,13 +186,17 @@ public class VSphereComputeServiceAdapter implements
                 long currentDiskSize = 0;
                 int numberOfHardDrives = 0;
 
+                int diskKey = 0;
+
                 for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
                     if (device instanceof VirtualDisk) {
                         VirtualDisk vd = (VirtualDisk) device;
+                        diskKey = vd.getKey();
                         currentDiskSize += vd.getCapacityInKB();
                         numberOfHardDrives++;
                     }
                 }
+
 
                 for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
                     if (device instanceof VirtualEthernetCard) {
@@ -190,6 +204,45 @@ public class VSphereComputeServiceAdapter implements
                         nicSpec.setOperation(VirtualDeviceConfigSpecOperation.remove);
                         nicSpec.setDevice(device);
                         updates.add(nicSpec);
+                    } else if (device instanceof VirtualIDEController) {
+                    } else if (device instanceof VirtualCdrom) {
+                        if (vOptions.isoFileName() != null) {
+                            VirtualCdrom vCdrom = (VirtualCdrom) device;
+                            VirtualDeviceConfigSpec cdSpec = new VirtualDeviceConfigSpec();
+                            cdSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+
+                            VirtualCdromIsoBackingInfo iso = new VirtualCdromIsoBackingInfo();
+                            Datastore datastore = vSphereHost.get().getDatastore();
+                            VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
+                            cInfo.setStartConnected(true);
+                            cInfo.setConnected(true);
+                            iso.setDatastore(datastore.getMOR());
+                            iso.setFileName("[" + datastore.getName() + "] " + vOptions.isoFileName());
+
+                            vCdrom.setConnectable(cInfo);
+                            vCdrom.setBacking(iso);
+                            cdSpec.setDevice(vCdrom);
+                            updates.add(cdSpec);
+                        }
+                    } else if (device instanceof VirtualFloppy) {
+                        if (vOptions.flpFileName() != null) {
+                            VirtualFloppy vFloppy = (VirtualFloppy) device;
+                            VirtualDeviceConfigSpec floppySpec = new VirtualDeviceConfigSpec();
+                            floppySpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+
+                            VirtualFloppyImageBackingInfo image = new VirtualFloppyImageBackingInfo();
+                            Datastore datastore = vSphereHost.get().getDatastore();
+                            VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
+                            cInfo.setStartConnected(true);
+                            cInfo.setConnected(true);
+                            image.setDatastore(datastore.getMOR());
+                            image.setFileName("[" + datastore.getName() + "] " + vOptions.flpFileName());
+
+                            vFloppy.setConnectable(cInfo);
+                            vFloppy.setBacking(image);
+                            floppySpec.setDevice(vFloppy);
+                            updates.add(floppySpec);
+                        }
                     } else if (device instanceof VirtualLsiLogicController) {
                         //int unitNumber = master.getConfig().getHardware().getDevice().length;
                         int unitNumber = numberOfHardDrives;
@@ -197,6 +250,8 @@ public class VSphereComputeServiceAdapter implements
                         VirtualLsiLogicController lsiLogicController = (VirtualLsiLogicController) device;
                         String dsName = vSphereHost.get().getDatastore().getName();
                         for (Volume volume : volumes) {
+                            long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
+
                             VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
 
                             VirtualDisk disk = new VirtualDisk();
@@ -214,7 +269,7 @@ public class VSphereComputeServiceAdapter implements
                             disk.setControllerKey(ckey);
                             disk.setUnitNumber(unitNumber);
                             disk.setBacking(diskFileBacking);
-                            long size = (1024 * 1024 * volume.getSize().longValue()) - currentDiskSize;
+                            long size = currentVolumeSize;
                             disk.setCapacityInKB(size);
                             disk.setKey(-1);
 
@@ -227,7 +282,19 @@ public class VSphereComputeServiceAdapter implements
                     }
                 }
                 updates.addAll(createNicSpec(networkConfigs));
-                virtualMachineConfigSpec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[0]));
+                virtualMachineConfigSpec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+
+//                VirtualMachineBootOptions bootOptions = new VirtualMachineBootOptions();
+//                List<VirtualMachineBootOptionsBootableDevice> bootOrder = Lists.newArrayList();
+//
+//                VirtualMachineBootOptionsBootableDiskDevice diskBootDevice = new VirtualMachineBootOptionsBootableDiskDevice();
+//                diskBootDevice.setDeviceKey(diskKey);
+//                bootOrder.add(diskBootDevice);
+//                bootOrder.add(new VirtualMachineBootOptionsBootableCdromDevice());
+//                bootOptions.setBootOrder(bootOrder.toArray(new VirtualMachineBootOptionsBootableDevice[0]));
+//
+//                virtualMachineConfigSpec.setBootOptions(bootOptions);
+
                 cloneSpec.setConfig(virtualMachineConfigSpec);
 
                 vOptions.getPublicKey();
@@ -245,7 +312,17 @@ public class VSphereComputeServiceAdapter implements
 
                         cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_TAGS).getKey(), tags.toString());
                         cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_GROUP).getKey(), tag);
-                        postConfiguration(cloned, name, tag, networkConfigs);
+                        if (vOptions.postConfiguration())
+                            postConfiguration(cloned, name, tag, networkConfigs);
+                        else {
+                            while (! (cloned.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) ||
+                                    cloned.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld)) ) {
+                                try {
+                                    Thread.sleep(60 * 1000);
+                                } catch (Exception e) {
+                                }
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("Can't clone vm " + master.getName(), e);
@@ -579,29 +656,6 @@ public class VSphereComputeServiceAdapter implements
         return checkNotNull(image, "image");
     }
 
-    private void markVirtualMachineAsTemplate(VirtualMachine vm) throws RemoteException {
-
-        lock.lock();
-        try {
-            if (!vm.getConfig().isTemplate())
-                vm.markAsTemplate();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    private void markTemplateAsVirtualMachine(VirtualMachine master, ResourcePool resourcePool, HostSystem host)
-            throws RemoteException, TaskInProgress, InterruptedException {
-        lock.lock();
-        try {
-            if (master.getConfig().isTemplate())
-                master.markAsVirtualMachine(resourcePool, host);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-
     private List<VirtualDeviceConfigSpec> createNicSpec(Set<NetworkConfig> networks) {
         List<VirtualDeviceConfigSpec> nics = new ArrayList<VirtualDeviceConfigSpec>();
         int i = 0;
@@ -625,6 +679,29 @@ public class VSphereComputeServiceAdapter implements
             i++;
         }
         return nics;
+    }
+
+    private void markVirtualMachineAsTemplate(VirtualMachine vm) throws RemoteException {
+
+        lock.lock();
+        try {
+            if (!vm.getConfig().isTemplate())
+                vm.markAsTemplate();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
+    private void markTemplateAsVirtualMachine(VirtualMachine master, ResourcePool resourcePool, HostSystem host)
+            throws RemoteException, TaskInProgress, InterruptedException {
+        lock.lock();
+        try {
+            if (master.getConfig().isTemplate())
+                master.markAsVirtualMachine(resourcePool, host);
+        } finally {
+            lock.unlock();
+        }
     }
 
 
@@ -654,7 +731,7 @@ public class VSphereComputeServiceAdapter implements
 
         int retries = 0;
         while (!vm.getConfig().isTemplate()
-                && !vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk)
+                && ! (vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld))
                 && retries < 20) {
             try {
                 Thread.sleep(10 * 1000);
@@ -740,7 +817,7 @@ public class VSphereComputeServiceAdapter implements
                     }
                 }
             }
-            logger.trace("process pid : " + pid);
+            logger.trace("<< process pid : " + pid);
         } catch (RemoteException e) {
             logger.error(e.getMessage(), e);
             Throwables.propagate(e);

@@ -1,18 +1,21 @@
 /*
-* Copyright 2014 Cisco Systems, Inc
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.jclouds.vsphere.compute.config;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,6 +42,7 @@ import org.jclouds.domain.Location;
 import org.jclouds.functions.IdentityFunction;
 import org.jclouds.location.suppliers.LocationsSupplier;
 import org.jclouds.ssh.SshClient;
+import org.jclouds.vsphere.IFileManager;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
@@ -49,6 +53,7 @@ import org.jclouds.vsphere.functions.NetworkConfigSupplier;
 import org.jclouds.vsphere.functions.VirtualMachineToImage;
 import org.jclouds.vsphere.functions.VirtualMachineToNodeMetadata;
 import org.jclouds.vsphere.functions.VirtualMachineToSshClient;
+import org.jclouds.vsphere.internal.VSphereFileManager;
 import org.jclouds.vsphere.suppliers.VSphereHostSupplier;
 import org.jclouds.vsphere.suppliers.VSphereLocationSupplier;
 
@@ -59,7 +64,7 @@ import java.rmi.RemoteException;
 import java.util.Map;
 
 /**
- * @author Izek Greenfield
+ * based on Andrea Turli work.
  */
 public class VSphereComputeServiceContextModule extends
         ComputeServiceAdapterContextModule<VirtualMachine, Hardware, Image, Location> {
@@ -71,6 +76,7 @@ public class VSphereComputeServiceContextModule extends
         bind(ComputeService.class).to(VSphereComputeService.class);
         bind(TemplateOptions.class).to(VSphereTemplateOptions.class);
         bind(LocationsSupplier.class).to(VSphereLocationSupplier.class);
+        bind(IFileManager.class).to(VSphereFileManager.class);
 
         bind(new TypeLiteral<ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location>>() {
         }).to(VSphereComputeServiceAdapter.class);

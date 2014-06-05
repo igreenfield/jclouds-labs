@@ -1,18 +1,21 @@
 /*
-* Copyright 2014 Cisco Systems, Inc
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.jclouds.vsphere;
 
 
@@ -25,6 +28,7 @@ import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.testng.annotations.Test;
 
 import java.util.Set;
@@ -39,9 +43,9 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-//@Test(groups = "unit", testName = "ContextBuilderTest")
+@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
-    public void  testVsphereContext() throws RunNodesException {
+    public void  testVSphereContext() throws RunNodesException {
         ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
         ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
 //                .credentials("root", "master1234")
@@ -53,18 +57,40 @@ public class ContextBuilderTest {
 
         TemplateBuilder b = context.getComputeService().templateBuilder();
         TemplateOptions o = context.getComputeService().templateOptions();
+        ((VSphereTemplateOptions)o).isoFileName("ISO/UCSInstall_UCOS_3.1.0.0-9914.iso");
+        ((VSphereTemplateOptions)o).flpFileName("ISO/image.flp");
+        ((VSphereTemplateOptions)o).postConfiguration(false);
         o.tags(ImmutableSet.of("from UnitTest"))
                 .nodeNames(ImmutableSet.of("first-vm12"))
-                .runScript("cd /tmp; touch test.txt")
-                .networks("VLAN537", "VLAN537")
-                ;
+                .networks("VLAN537");
 //        b.imageId("Cisco Centos 6.5").smallest();
 //        b.imageId("Cisco Centos 6.5.0").smallest().options(o);
-        b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
+        //b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
+        b.imageId("conductor-mgt").locationId("default").minRam(6000).options(o);
 
        // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
         Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());
 
         System.out.print("");
     }
+
+
+
+//    public void  testVSphereApi() throws RunNodesException, IOException {
+//        ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
+//        Injector injector = ContextBuilder.newBuilder("vsphere")
+//                .credentials("root", "vmware")
+//                .endpoint("https://10.45.7.70/sdk")
+//                .modules(modules)
+//                .buildInjector();
+//
+//        IFileManager fileManagerApi = injector.getInstance(IFileManager.class);
+//        fileManagerApi.uploadFile("C:/Users/igreenfi/Desktop/image.flp", "test5/image.flp");
+//
+////        VSphereRestClient client = new VSphereRestClient("https://10.45.7.70","root","vmware");
+////
+////        client.putFile("test3/image.flp","CH","chesx3-datastore", new File("C:/Users/igreenfi/Desktop/image.flp"));
+//
+//        System.out.print("");
+//    }
 }
