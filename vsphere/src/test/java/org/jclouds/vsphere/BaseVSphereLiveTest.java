@@ -31,7 +31,7 @@ import java.net.URL;
  * Package: org.jclouds.vsphere
  */
 public class BaseVSphereLiveTest {
-    @Test
+    //@Test
     public void testTestUploadFile() throws Exception {
         ServiceInstance si = new ServiceInstance(new URL("https://10.45.7.70/sdk"), "root", "vmware", true);
         //si.getFileManager().makeDirectory();
