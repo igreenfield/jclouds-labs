@@ -78,13 +78,25 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
     private String isoFileName = null;
     private String flpFileName = null;
     private boolean postConfiguration = true;
+    private Integer waitOnPort = null;
+
+    public Integer waitOnPort() {
+        return waitOnPort;
+    }
+
+    public VSphereTemplateOptions waitOnPort(Integer waitOnPort) {
+        this.waitOnPort = waitOnPort;
+        return this;
+    }
 
     public boolean postConfiguration() {
         return postConfiguration;
+
     }
 
-    public void postConfiguration(boolean postConfiguration) {
+    public VSphereTemplateOptions postConfiguration(boolean postConfiguration) {
         this.postConfiguration = postConfiguration;
+        return this;
     }
 
     @Override

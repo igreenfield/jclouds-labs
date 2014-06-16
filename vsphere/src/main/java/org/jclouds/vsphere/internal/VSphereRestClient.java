@@ -60,10 +60,16 @@ public class VSphereRestClient {
         putCon.setRequestProperty("Cookie", cookie);
         long fileSize = file.length();
         putCon.setRequestProperty("Content-Length", Long.toString(fileSize));
-        putCon.setChunkedStreamingMode(CHUNKLEN);
+        byte[] buffer  = new byte[CHUNKLEN];
+        if (fileSize > CHUNKLEN)
+            putCon.setChunkedStreamingMode(CHUNKLEN);
+        else {
+            putCon.setChunkedStreamingMode((int)fileSize);
+            buffer = new byte[(int)fileSize];
+        }
+
         DataOutputStream out = new DataOutputStream(putCon.getOutputStream());
         FileInputStream in = new FileInputStream(file);
-        byte[] buffer  = new byte[1024 * 10];
         int len = 0;
         while ((len = in.read(buffer)) > 0) {
             out.write(buffer, 0, len);

@@ -99,12 +99,12 @@
             <version>5.1</version>
         </dependency>
 
-        <dependency>
+       <!-- <dependency>
             <groupId>net.sourceforge.expectj</groupId>
             <artifactId>expectj</artifactId>
             <version>2.0.7</version>
         </dependency>
-
+-->
         <dependency>
             <groupId>org.codehaus.mojo.enchanter</groupId>
             <artifactId>enchanter-core</artifactId>

@@ -30,6 +30,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.Description;
+import com.vmware.vim25.FileTransferInformation;
 import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.GuestProcessInfo;
 import com.vmware.vim25.GuestProgramSpec;
@@ -58,6 +59,7 @@ import com.vmware.vim25.VirtualPCNet32;
 import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.GuestAuthManager;
+import com.vmware.vim25.mo.GuestFileManager;
 import com.vmware.vim25.mo.GuestOperationsManager;
 import com.vmware.vim25.mo.GuestProcessManager;
 import com.vmware.vim25.mo.HostSystem;
@@ -327,6 +329,10 @@ public class VSphereComputeServiceAdapter implements
                 } catch (Exception e) {
                     logger.error("Can't clone vm " + master.getName(), e);
                     propagate(e);
+                }
+
+                if (vOptions.waitOnPort() != null){
+
                 }
 
 
@@ -724,6 +730,38 @@ public class VSphereComputeServiceAdapter implements
             return "dhcp";
         else
             return "none";
+    }
+
+    private void waitForPort(VirtualMachine vm, int port, long timeout){
+        GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
+        GuestAuthManager gam = gom.getAuthManager(vm);
+        NamePasswordAuthentication npa = new NamePasswordAuthentication();
+        npa.setUsername("root");
+        npa.setPassword(vmInitPassword);
+        GuestProgramSpec gps = new GuestProgramSpec();
+        gps.programPath = "/bin/sh";
+
+        StringBuilder openPortScript = new StringBuilder("netstat -nat | grep LIST | grep -q ':" + port + " ' && touch /tmp/portopen.txt");
+
+
+        gps.arguments = "-c \"" + openPortScript.toString() + "\"";
+
+        List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin",
+                "SHELL=/bin/bash");
+
+        gps.setEnvVariables(env.toArray(new String[env.size()]));
+        GuestProcessManager gpm = gom.getProcessManager(vm);
+        try {
+            long pid = gpm.startProgramInGuest(npa, gps);
+
+            GuestFileManager guestFileManager = vm.getServerConnection().getServiceInstance().getGuestOperationsManager().getFileManager(vm);
+            FileTransferInformation fti = guestFileManager.initiateFileTransferFromGuest(npa, "/tmp/portopen.txt");
+            if (fti.getSize() == 0)
+                logger.debug(" ");
+        } catch (RemoteException e) {
+            logger.error(e.getMessage(), e);
+            Throwables.propagate(e);
+        }
     }
 
 
