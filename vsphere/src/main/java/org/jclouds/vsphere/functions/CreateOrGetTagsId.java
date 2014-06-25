@@ -42,55 +42,56 @@ import static com.google.common.base.Preconditions.checkState;
 @Singleton
 public class CreateOrGetTagsId implements Supplier<Map<String, CustomFieldDef>> {
 
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    private final Supplier<VSphereServiceInstance> serviceInstance;
-    private Map<String, CustomFieldDef> customFieldDefMap = Maps.newHashMap();
+   private final Supplier<VSphereServiceInstance> serviceInstance;
+   private Map<String, CustomFieldDef> customFieldDefMap = Maps.newHashMap();
 
-    @Inject
-    public CreateOrGetTagsId(Supplier<VSphereServiceInstance> serviceInstance) {
+   @Inject
+   public CreateOrGetTagsId(Supplier<VSphereServiceInstance> serviceInstance) {
 
-        this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
-        start();
-    }
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
+      start();
+   }
 
-    public synchronized void start() {
-        Closer closer = Closer.create();
-        VSphereServiceInstance client = serviceInstance.get();
-        closer.register(client);
-        try {
-            try {
+   @Inject
+   public synchronized void start() {
+      Closer closer = Closer.create();
+      VSphereServiceInstance client = serviceInstance.get();
+      closer.register(client);
+      try {
+         try {
 
-                CustomFieldDef[] customFieldDefs = client.getInstance().getCustomFieldsManager().getField();
-                if (null != customFieldDefs) {
-                    for (CustomFieldDef field : customFieldDefs) {
-                        if (field.getName().equalsIgnoreCase(VSphereConstants.JCLOUDS_TAGS)) {
-                            customFieldDefMap.put(VSphereConstants.JCLOUDS_TAGS, field);
-                        } else if (field.getName().equalsIgnoreCase(VSphereConstants.JCLOUDS_GROUP)) {
-                            customFieldDefMap.put(VSphereConstants.JCLOUDS_GROUP, field);
-                        }
-                    }
-                }
-                if (!customFieldDefMap.containsKey(VSphereConstants.JCLOUDS_TAGS))
-                    customFieldDefMap.put(VSphereConstants.JCLOUDS_TAGS, client.getInstance().getCustomFieldsManager().addCustomFieldDef(VSphereConstants.JCLOUDS_TAGS, null, null, null));
-                if (!customFieldDefMap.containsKey(VSphereConstants.JCLOUDS_GROUP))
-                    customFieldDefMap.put(VSphereConstants.JCLOUDS_GROUP, client.getInstance().getCustomFieldsManager().addCustomFieldDef(VSphereConstants.JCLOUDS_GROUP, null, null, null));
-            } catch (Throwable t) {
-                throw closer.rethrow(t);
-            } finally {
-                closer.close();
+            CustomFieldDef[] customFieldDefs = client.getInstance().getCustomFieldsManager().getField();
+            if (null != customFieldDefs) {
+               for (CustomFieldDef field : customFieldDefs) {
+                  if (field.getName().equalsIgnoreCase(VSphereConstants.JCLOUDS_TAGS)) {
+                     customFieldDefMap.put(VSphereConstants.JCLOUDS_TAGS, field);
+                  } else if (field.getName().equalsIgnoreCase(VSphereConstants.JCLOUDS_GROUP)) {
+                     customFieldDefMap.put(VSphereConstants.JCLOUDS_GROUP, field);
+                  }
+               }
             }
-        } catch (IOException e) {
-            Throwables.propagate(e);
-        }
-    }
+            if (!customFieldDefMap.containsKey(VSphereConstants.JCLOUDS_TAGS))
+               customFieldDefMap.put(VSphereConstants.JCLOUDS_TAGS, client.getInstance().getCustomFieldsManager().addCustomFieldDef(VSphereConstants.JCLOUDS_TAGS, null, null, null));
+            if (!customFieldDefMap.containsKey(VSphereConstants.JCLOUDS_GROUP))
+               customFieldDefMap.put(VSphereConstants.JCLOUDS_GROUP, client.getInstance().getCustomFieldsManager().addCustomFieldDef(VSphereConstants.JCLOUDS_GROUP, null, null, null));
+         } catch (Throwable t) {
+            throw closer.rethrow(t);
+         } finally {
+            closer.close();
+         }
+      } catch (IOException e) {
+         Throwables.propagate(e);
+      }
+   }
 
-    @Override
-    public Map<String, CustomFieldDef> get() {
-        checkState(customFieldDefMap.size() > 0, "(CreateOrGetTagsId) start not called");
-        return customFieldDefMap;
-    }
+   @Override
+   public Map<String, CustomFieldDef> get() {
+      checkState(customFieldDefMap.size() > 0, "(CreateOrGetTagsId) start not called");
+      return customFieldDefMap;
+   }
 
 }

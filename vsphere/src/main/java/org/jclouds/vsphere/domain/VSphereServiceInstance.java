@@ -26,23 +26,23 @@ import java.io.IOException;
 
 /**
  * Wrapper class on the ServiceInstance from vSphere SDK
- * User: igreenfi
+ * <p/>
  * Date: 3/5/14
  * Time: 10:26 AM
  */
 public class VSphereServiceInstance implements Closeable {
-    private ServiceInstance instance;
+   private ServiceInstance instance;
 
-    public VSphereServiceInstance(ServiceInstance instance) {
-        this.instance = instance;
-    }
+   public VSphereServiceInstance(ServiceInstance instance) {
+      this.instance = instance;
+   }
 
-    public ServiceInstance getInstance() {
-        return instance;
-    }
+   public ServiceInstance getInstance() {
+      return instance;
+   }
 
-    @Override
-    public void close() throws IOException {
-        instance.getServerConnection().logout();
-    }
+   @Override
+   public void close() throws IOException {
+      instance.getServerConnection().logout();
+   }
 }

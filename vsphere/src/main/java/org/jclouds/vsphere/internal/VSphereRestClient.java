@@ -27,60 +27,58 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * CISCO LTD.
- * User: igreenfi
  * Date: 19/05/2014 9:04 AM
  * Package: org.jclouds.vsphere.internal
  */
 public class VSphereRestClient {
-    public static final int CHUNKLEN = 1024 * 10 * 10 * 10;
-    private final String baseUrl;
+   public static final int CHUNKLEN = 1024 * 10 * 10 * 10;
+   private final String baseUrl;
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
+   public String getBaseUrl() {
+      return baseUrl;
+   }
 
-    public VSphereRestClient(String serverUrl) {
-       this.baseUrl = serverUrl;
-    }
+   public VSphereRestClient(String serverUrl) {
+      this.baseUrl = serverUrl;
+   }
 
-    private String buildPutUrl(String urlStr, String dcPath, String dsName) {
-        StringBuilder builder = new StringBuilder(this.getBaseUrl());
-        builder.append("/folder/").append(urlStr).append("?dcPath=").append(dcPath).append("&dsName=").append(dsName);
-        return builder.toString();
-    }
+   private String buildPutUrl(String urlStr, String dcPath, String dsName) {
+      StringBuilder builder = new StringBuilder(this.getBaseUrl());
+      builder.append("/folder/").append(urlStr).append("?dcPath=").append(dcPath).append("&dsName=").append(dsName);
+      return builder.toString();
+   }
 
-    public int putFile(String cookie, String urlStr, String dcPath, String dsName, File file) throws IOException {
-        String putUrl = buildPutUrl(urlStr, dcPath, dsName);
+   public int putFile(String cookie, String urlStr, String dcPath, String dsName, File file) throws IOException {
+      String putUrl = buildPutUrl(urlStr, dcPath, dsName);
 
-        HttpURLConnection putCon = (HttpURLConnection) new URL(putUrl).openConnection();
-        putCon.setRequestMethod("PUT");
-        putCon.setDoOutput(true);
-        putCon.setDoInput(true);
-        putCon.setRequestProperty("Cookie", cookie);
-        long fileSize = file.length();
-        putCon.setRequestProperty("Content-Length", Long.toString(fileSize));
-        byte[] buffer  = new byte[CHUNKLEN];
-        if (fileSize > CHUNKLEN)
-            putCon.setChunkedStreamingMode(CHUNKLEN);
-        else {
-            putCon.setChunkedStreamingMode((int)fileSize);
-            buffer = new byte[(int)fileSize];
-        }
+      HttpURLConnection putCon = (HttpURLConnection) new URL(putUrl).openConnection();
+      putCon.setRequestMethod("PUT");
+      putCon.setDoOutput(true);
+      putCon.setDoInput(true);
+      putCon.setRequestProperty("Cookie", cookie);
+      long fileSize = file.length();
+      putCon.setRequestProperty("Content-Length", Long.toString(fileSize));
+      byte[] buffer = new byte[CHUNKLEN];
+      if (fileSize > CHUNKLEN)
+         putCon.setChunkedStreamingMode(CHUNKLEN);
+      else {
+         putCon.setChunkedStreamingMode((int) fileSize);
+         buffer = new byte[(int) fileSize];
+      }
 
-        DataOutputStream out = new DataOutputStream(putCon.getOutputStream());
-        FileInputStream in = new FileInputStream(file);
-        int len = 0;
-        while ((len = in.read(buffer)) > 0) {
-            out.write(buffer, 0, len);
-        }
-        if (in != null)
-            in.close();
-        if (out != null){
-            out.flush();
-            out.close();
-        }
-        return 201;
-    }
+      DataOutputStream out = new DataOutputStream(putCon.getOutputStream());
+      FileInputStream in = new FileInputStream(file);
+      int len = 0;
+      while ((len = in.read(buffer)) > 0) {
+         out.write(buffer, 0, len);
+      }
+      if (in != null)
+         in.close();
+      if (out != null) {
+         out.flush();
+         out.close();
+      }
+      return 201;
+   }
 
 }

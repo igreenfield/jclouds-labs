@@ -46,13 +46,7 @@ import org.jclouds.vsphere.IFileManager;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
-import org.jclouds.vsphere.functions.CreateAndConnectVSphereClient;
-import org.jclouds.vsphere.functions.CreateOrGetTagsId;
-import org.jclouds.vsphere.functions.HostSystemToVSphereHost;
-import org.jclouds.vsphere.functions.NetworkConfigSupplier;
-import org.jclouds.vsphere.functions.VirtualMachineToImage;
-import org.jclouds.vsphere.functions.VirtualMachineToNodeMetadata;
-import org.jclouds.vsphere.functions.VirtualMachineToSshClient;
+import org.jclouds.vsphere.functions.*;
 import org.jclouds.vsphere.internal.VSphereFileManager;
 import org.jclouds.vsphere.suppliers.VSphereHostSupplier;
 import org.jclouds.vsphere.suppliers.VSphereLocationSupplier;
@@ -69,109 +63,109 @@ import java.util.Map;
 public class VSphereComputeServiceContextModule extends
         ComputeServiceAdapterContextModule<VirtualMachine, Hardware, Image, Location> {
 
-    @Override
-    protected void configure() {
-        super.configure();
+   @Override
+   protected void configure() {
+      super.configure();
 
-        bind(ComputeService.class).to(VSphereComputeService.class);
-        bind(TemplateOptions.class).to(VSphereTemplateOptions.class);
-        bind(LocationsSupplier.class).to(VSphereLocationSupplier.class);
-        bind(IFileManager.class).to(VSphereFileManager.class);
+      bind(ComputeService.class).to(VSphereComputeService.class);
+      bind(TemplateOptions.class).to(VSphereTemplateOptions.class);
+      bind(LocationsSupplier.class).to(VSphereLocationSupplier.class);
+      bind(IFileManager.class).to(VSphereFileManager.class);
 
-        bind(new TypeLiteral<ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location>>() {
-        }).to(VSphereComputeServiceAdapter.class);
+      bind(new TypeLiteral<ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location>>() {
+      }).to(VSphereComputeServiceAdapter.class);
 
-        bind(new TypeLiteral<Function<Location, Location>>() {
-        }).to(Class.class.cast(IdentityFunction.class));
+      bind(new TypeLiteral<Function<Location, Location>>() {
+      }).to(Class.class.cast(IdentityFunction.class));
 
-        bind(new TypeLiteral<Function<Image, Image>>() {
-        }).to(Class.class.cast(IdentityFunction.class));
+      bind(new TypeLiteral<Function<Image, Image>>() {
+      }).to(Class.class.cast(IdentityFunction.class));
 
-        bind(new TypeLiteral<Function<Hardware, Hardware>>() {
-        }).to(Class.class.cast(IdentityFunction.class));
+      bind(new TypeLiteral<Function<Hardware, Hardware>>() {
+      }).to(Class.class.cast(IdentityFunction.class));
 
-        bind(new TypeLiteral<Function<VirtualMachine, NodeMetadata>>() {
-        }).to(VirtualMachineToNodeMetadata.class);
+      bind(new TypeLiteral<Function<VirtualMachine, NodeMetadata>>() {
+      }).to(VirtualMachineToNodeMetadata.class);
 
-        bind(new TypeLiteral<Function<HostSystem, VSphereHost>>() {
-        }).to(HostSystemToVSphereHost.class);
+      bind(new TypeLiteral<Function<HostSystem, VSphereHost>>() {
+      }).to(HostSystemToVSphereHost.class);
 
-        bind(new TypeLiteral<Supplier<VSphereServiceInstance>>() {
-        }).to((Class) CreateAndConnectVSphereClient.class);
+      bind(new TypeLiteral<Supplier<VSphereServiceInstance>>() {
+      }).to((Class) CreateAndConnectVSphereClient.class);
 
 //        bind(new TypeLiteral<Supplier<Set<? extends Location>>>() {
 //        }).to((Class) VSphereLocationSupplier.class);
 
-        bind(new TypeLiteral<Supplier<VSphereHost>>() {
-        }).to((Class) VSphereHostSupplier.class);
+      bind(new TypeLiteral<Supplier<VSphereHost>>() {
+      }).to((Class) VSphereHostSupplier.class);
 
-        bind(new TypeLiteral<Supplier<Map<String, CustomFieldDef>>>() {
-        }).to((Class) CreateOrGetTagsId.class);
+      bind(new TypeLiteral<Supplier<Map<String, CustomFieldDef>>>() {
+      }).to((Class) CreateOrGetTagsId.class);
 
-        bind(new TypeLiteral<Supplier<NetworkConfigSupplier>>() {
-        }).to((Class) NetworkConfigSupplier.class);
+      bind(new TypeLiteral<Supplier<NetworkConfigSupplier>>() {
+      }).to((Class) NetworkConfigSupplier.class);
 
-        bind(new TypeLiteral<Function<VirtualMachine, SshClient>>() {
-        }).to(VirtualMachineToSshClient.class);
+      bind(new TypeLiteral<Function<VirtualMachine, SshClient>>() {
+      }).to(VirtualMachineToSshClient.class);
 
-        bind(new TypeLiteral<Function<VirtualMachine, Image>>() {
-        }).to(VirtualMachineToImage.class);
-    }
+      bind(new TypeLiteral<Function<VirtualMachine, Image>>() {
+      }).to(VirtualMachineToImage.class);
+   }
 
-    @VisibleForTesting
-    public static final Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus = ImmutableMap
-            .<VirtualMachinePowerState, NodeMetadata.Status> builder()
-            .put(VirtualMachinePowerState.poweredOff, NodeMetadata.Status.TERMINATED)
-            .put(VirtualMachinePowerState.poweredOn, NodeMetadata.Status.RUNNING)
-            .put(VirtualMachinePowerState.suspended, NodeMetadata.Status.SUSPENDED).build();
+   @VisibleForTesting
+   public static final Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus = ImmutableMap
+           .<VirtualMachinePowerState, NodeMetadata.Status>builder()
+           .put(VirtualMachinePowerState.poweredOff, NodeMetadata.Status.TERMINATED)
+           .put(VirtualMachinePowerState.poweredOn, NodeMetadata.Status.RUNNING)
+           .put(VirtualMachinePowerState.suspended, NodeMetadata.Status.SUSPENDED).build();
 
-    @Singleton
-    @Provides
-    protected Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus() {
-        return toPortableNodeStatus;
-    }
+   @Singleton
+   @Provides
+   protected Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus() {
+      return toPortableNodeStatus;
+   }
 
-    @Provides
-    @Singleton
-    protected Function<Supplier<NodeMetadata>, ServiceInstance> client() {
-        return new Function<Supplier<NodeMetadata>, ServiceInstance>() {
+   @Provides
+   @Singleton
+   protected Function<Supplier<NodeMetadata>, ServiceInstance> client() {
+      return new Function<Supplier<NodeMetadata>, ServiceInstance>() {
 
-            @Override
-            public ServiceInstance apply(Supplier<NodeMetadata> nodeSupplier) {
-                try {
-                    return new ServiceInstance(new URL("https://localhost/sdk"), "root", "", true);
-                } catch (RemoteException e) {
-                    Throwables.propagate(e);
-                    return null;
-                } catch (MalformedURLException e) {
-                    Throwables.propagate(e);
-                    return null;
-                }
+         @Override
+         public ServiceInstance apply(Supplier<NodeMetadata> nodeSupplier) {
+            try {
+               return new ServiceInstance(new URL("https://localhost/sdk"), "root", "", true);
+            } catch (RemoteException e) {
+               Throwables.propagate(e);
+               return null;
+            } catch (MalformedURLException e) {
+               Throwables.propagate(e);
+               return null;
             }
+         }
 
-            @Override
-            public String toString() {
-                return "createInstanceByNodeId()";
-            }
+         @Override
+         public String toString() {
+            return "createInstanceByNodeId()";
+         }
 
-        };
-    }
+      };
+   }
 
-    @VisibleForTesting
-    public static final Map<VirtualMachinePowerState, Image.Status> toPortableImageStatus = ImmutableMap
-            .<VirtualMachinePowerState, Image.Status> builder().put(VirtualMachinePowerState.poweredOn, Image.Status.PENDING)
-            .put(VirtualMachinePowerState.poweredOff, Image.Status.AVAILABLE)
-            .put(VirtualMachinePowerState.suspended, Image.Status.PENDING)
-            .build();
+   @VisibleForTesting
+   public static final Map<VirtualMachinePowerState, Image.Status> toPortableImageStatus = ImmutableMap
+           .<VirtualMachinePowerState, Image.Status>builder().put(VirtualMachinePowerState.poweredOn, Image.Status.PENDING)
+           .put(VirtualMachinePowerState.poweredOff, Image.Status.AVAILABLE)
+           .put(VirtualMachinePowerState.suspended, Image.Status.PENDING)
+           .build();
 
-    @Singleton
-    @Provides
-    protected Map<VirtualMachinePowerState, Image.Status> toPortableImageStatus() {
-        return toPortableImageStatus;
-    }
+   @Singleton
+   @Provides
+   protected Map<VirtualMachinePowerState, Image.Status> toPortableImageStatus() {
+      return toPortableImageStatus;
+   }
 
-    @Override
-    protected TemplateOptions provideTemplateOptions(Injector injector, TemplateOptions options) {
-        return options.as(VSphereTemplateOptions.class);
-    }
+   @Override
+   protected TemplateOptions provideTemplateOptions(Injector injector, TemplateOptions options) {
+      return options.as(VSphereTemplateOptions.class);
+   }
 }

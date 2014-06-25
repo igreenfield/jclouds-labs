@@ -32,18 +32,18 @@ import javax.inject.Singleton;
 @Singleton
 public class NetworkConfigSupplier implements Supplier<NetworkConfig> {
 
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    @Inject
-    public NetworkConfigSupplier() {
+   @Inject
+   public NetworkConfigSupplier() {
 
-    }
+   }
 
-    @Override
-    public NetworkConfig get() {
-        return new NetworkConfig("default");
-    }
+   @Override
+   public NetworkConfig get() {
+      return new NetworkConfig("default");
+   }
 
 }

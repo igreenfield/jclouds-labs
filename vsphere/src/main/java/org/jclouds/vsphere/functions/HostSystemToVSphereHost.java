@@ -32,15 +32,15 @@ import javax.inject.Singleton;
 public class HostSystemToVSphereHost implements Function<HostSystem, VSphereHost> {
 
 
-    @Inject
-    public HostSystemToVSphereHost() {
-    }
+   @Inject
+   public HostSystemToVSphereHost() {
+   }
 
-    @Override
-    public VSphereHost apply(@Nullable HostSystem from) {
-        if (from == null)
-            return null;
-        return new VSphereHost(from, new VSphereServiceInstance(from.getServerConnection().getServiceInstance()));
-    }
+   @Override
+   public VSphereHost apply(@Nullable HostSystem from) {
+      if (from == null)
+         return null;
+      return new VSphereHost(from, new VSphereServiceInstance(from.getServerConnection().getServiceInstance()));
+   }
 
 }

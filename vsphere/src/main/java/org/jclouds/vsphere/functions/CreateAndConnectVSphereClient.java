@@ -46,40 +46,40 @@ import static com.google.common.base.Preconditions.checkState;
 @Singleton
 public class CreateAndConnectVSphereClient implements Supplier<VSphereServiceInstance> {
 
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    private final Supplier<URI> providerSupplier;
-    //private transient ServiceInstance client;
-    private transient Supplier<Credentials> credentials;
+   private final Supplier<URI> providerSupplier;
+   //private transient ServiceInstance client;
+   private transient Supplier<Credentials> credentials;
 
-    @Inject
-    public CreateAndConnectVSphereClient(Function<Supplier<NodeMetadata>, ServiceInstance> providerContextToCloud,
-                                         Factory runScriptOnNodeFactory,
-                                         @Provider Supplier<URI> providerSupplier,
-                                         @Provider Supplier<Credentials> credentials) {
+   @Inject
+   public CreateAndConnectVSphereClient(Function<Supplier<NodeMetadata>, ServiceInstance> providerContextToCloud,
+                                        Factory runScriptOnNodeFactory,
+                                        @Provider Supplier<URI> providerSupplier,
+                                        @Provider Supplier<Credentials> credentials) {
 
-        this.credentials = checkNotNull(credentials, "credentials is needed");
-        this.providerSupplier = checkNotNull(providerSupplier, "endpoint to vSphere node or vCenter server is needed");
-    }
+      this.credentials = checkNotNull(credentials, "credentials is needed");
+      this.providerSupplier = checkNotNull(providerSupplier, "endpoint to vSphere node or vCenter server is needed");
+   }
 
-    public synchronized ServiceInstance start() {
-        URI provider = providerSupplier.get();
-        try {
-            return new ServiceInstance(new URL(provider.toASCIIString()), credentials.get().identity, credentials.get().credential, true);
-        } catch (RemoteException e) {
-            throw Throwables.propagate(e);
-        } catch (MalformedURLException e) {
-            throw Throwables.propagate(e);
-        }
-    }
+   public synchronized ServiceInstance start() {
+      URI provider = providerSupplier.get();
+      try {
+         return new ServiceInstance(new URL(provider.toASCIIString()), credentials.get().identity, credentials.get().credential, true);
+      } catch (RemoteException e) {
+         throw Throwables.propagate(e);
+      } catch (MalformedURLException e) {
+         throw Throwables.propagate(e);
+      }
+   }
 
-    @Override
-    public VSphereServiceInstance get() {
-        ServiceInstance client = start();
-        checkState(client != null, "(CreateAndConnectVSphereClient) start not called");
-        return new VSphereServiceInstance(client);
-    }
+   @Override
+   public VSphereServiceInstance get() {
+      ServiceInstance client = start();
+      checkState(client != null, "(CreateAndConnectVSphereClient) start not called");
+      return new VSphereServiceInstance(client);
+   }
 
 }

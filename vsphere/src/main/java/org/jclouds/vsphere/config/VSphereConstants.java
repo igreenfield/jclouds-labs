@@ -25,14 +25,14 @@ package org.jclouds.vsphere.config;
 
 public class VSphereConstants {
 
-    public static final String CLONING = "jclouds.vsphere.cloning";
+   public static final String CLONING = "jclouds.vsphere.cloning";
 
-    public static final String JCLOUDS_VSPHERE_VM_PASSWORD = "jclouds.vsphere.vm.password";
+   public static final String JCLOUDS_VSPHERE_VM_PASSWORD = "jclouds.vsphere.vm.password";
 
-    public static final String JCLOUDS_TAGS = "jclouds_tags";
+   public static final String JCLOUDS_TAGS = "jclouds_tags";
 
-    public static final String JCLOUDS_GROUP = "jclouds_group";
+   public static final String JCLOUDS_GROUP = "jclouds_group";
 
-    public static final String VSPHERE_SNAPSHOT_DESCRITPION = "automatically created by Jclouds";
+   public static final String VSPHERE_SNAPSHOT_DESCRITPION = "automatically created by Jclouds";
 
 }

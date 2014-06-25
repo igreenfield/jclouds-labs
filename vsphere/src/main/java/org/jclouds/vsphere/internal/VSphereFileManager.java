@@ -44,69 +44,67 @@ import java.rmi.RemoteException;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * CISCO LTD.
- * User: igreenfi
  * Date: 18/05/2014 6:00 PM
  * Package: org.jclouds.vsphere.internal
  */
 public class VSphereFileManager implements IFileManager {
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    private final Supplier<VSphereServiceInstance> serviceInstance;
-    private final VSphereHostSupplier hostSupplier;
+   private final Supplier<VSphereServiceInstance> serviceInstance;
+   private final VSphereHostSupplier hostSupplier;
 
-    @Inject
-    public VSphereFileManager(Supplier<VSphereServiceInstance> serviceInstance, VSphereHostSupplier hostSupplier) {
-        this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
-        this.hostSupplier = checkNotNull(hostSupplier, "hostSupplier");
-    }
+   @Inject
+   public VSphereFileManager(Supplier<VSphereServiceInstance> serviceInstance, VSphereHostSupplier hostSupplier) {
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
+      this.hostSupplier = checkNotNull(hostSupplier, "hostSupplier");
+   }
 
-    private String getDatacenterName(ManagedEntity managedEntity) {
-        if (managedEntity.getMOR().getType().equals("Datacenter"))
-            return managedEntity.getName();
-        else
-            return getDatacenterName(managedEntity.getParent()) ;
-    }
+   private String getDatacenterName(ManagedEntity managedEntity) {
+      if (managedEntity.getMOR().getType().equals("Datacenter"))
+         return managedEntity.getName();
+      else
+         return getDatacenterName(managedEntity.getParent());
+   }
 
-    @Override
-    public void uploadFile(String srcFilePath, String destDirectory) throws IOException {
+   @Override
+   public void uploadFile(String srcFilePath, String destDirectory) throws IOException {
 
-        VSphereServiceInstance instance = serviceInstance.get();
-        String serverUrl = instance.getInstance().getServerConnection().getUrl().toString().replaceAll("/sdk","");
-        String cookie = instance.getInstance().getServerConnection().getSessionStr();
-        VSphereHost vSphereHost = hostSupplier.get();
-        String dsName = vSphereHost.getDatastore().getSummary().getName();
-        String dcPath = getDatacenterName(vSphereHost.getHost());
+      VSphereServiceInstance instance = serviceInstance.get();
+      String serverUrl = instance.getInstance().getServerConnection().getUrl().toString().replaceAll("/sdk", "");
+      String cookie = instance.getInstance().getServerConnection().getSessionStr();
+      VSphereHost vSphereHost = hostSupplier.get();
+      String dsName = vSphereHost.getDatastore().getSummary().getName();
+      String dcPath = getDatacenterName(vSphereHost.getHost());
 
-        VSphereRestClient client = new VSphereRestClient(serverUrl);
-        File file = new File(srcFilePath);
-        client.putFile(cookie, destDirectory, dcPath, dsName, file);
-    }
+      VSphereRestClient client = new VSphereRestClient(serverUrl);
+      File file = new File(srcFilePath);
+      client.putFile(cookie, destDirectory, dcPath, dsName, file);
+   }
 
-    @Override
-    public void changeOwner(String name, Datacenter datacenter, String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+   @Override
+   public void changeOwner(String name, Datacenter datacenter, String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException {
+      //To change body of implemented methods use File | Settings | File Templates.
+   }
 
-    @Override
-    public Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+   @Override
+   public Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+   }
 
-    @Override
-    public Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+   @Override
+   public Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+   }
 
-    @Override
-    public void makeDirectory(String name, Datacenter datacenter, boolean createParentDirectories) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
+   @Override
+   public void makeDirectory(String name, Datacenter datacenter, boolean createParentDirectories) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+      //To change body of implemented methods use File | Settings | File Templates.
+   }
 
-    @Override
-    public Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+   @Override
+   public Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+   }
 }

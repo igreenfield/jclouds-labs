@@ -29,7 +29,6 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
-import org.testng.annotations.Test;
 
 import java.util.Set;
 
@@ -37,7 +36,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
 
 /**
  * Created with IntelliJ IDEA.
- * User: igreenfi
+ * <p/>
  * Date: 2/23/14
  * Time: 12:58 PM
  * To change this template use File | Settings | File Templates.
@@ -45,35 +44,34 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
 
 //@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
-    public void  testVSphereContext() throws RunNodesException {
-        ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
-        ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
+   public void testVSphereContext() throws RunNodesException {
+      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
+      ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
 //                .credentials("root", "master1234")
 //                .endpoint("https://10.56.161.100/sdk")
-                .credentials("root", "vmware")
-                .endpoint("https://10.45.7.70/sdk")
-                .modules(modules)
-                .buildView(ComputeServiceContext.class);
+              .credentials("root", "vmware")
+              .endpoint("https://10.45.7.70/sdk")
+              .modules(modules)
+              .buildView(ComputeServiceContext.class);
 
-        TemplateBuilder b = context.getComputeService().templateBuilder();
-        TemplateOptions o = context.getComputeService().templateOptions();
-        ((VSphereTemplateOptions)o).isoFileName("ISO/UCSInstall_UCOS_3.1.0.0-9914.iso");
-        ((VSphereTemplateOptions)o).flpFileName("ISO/image.flp");
-        ((VSphereTemplateOptions)o).postConfiguration(false);
-        o.tags(ImmutableSet.of("from UnitTest"))
-                .nodeNames(ImmutableSet.of("first-vm12"))
-                .networks("VLAN537");
+      TemplateBuilder b = context.getComputeService().templateBuilder();
+      TemplateOptions o = context.getComputeService().templateOptions();
+      ((VSphereTemplateOptions) o).isoFileName("ISO/UCSInstall_UCOS_3.1.0.0-9914.iso");
+      ((VSphereTemplateOptions) o).flpFileName("ISO/image.flp");
+      ((VSphereTemplateOptions) o).postConfiguration(false);
+      o.tags(ImmutableSet.of("from UnitTest"))
+              .nodeNames(ImmutableSet.of("first-vm12"))
+              .networks("VLAN537");
 //        b.imageId("Cisco Centos 6.5").smallest();
 //        b.imageId("Cisco Centos 6.5.0").smallest().options(o);
-        //b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
-        b.imageId("conductor-mgt").locationId("default").minRam(6000).options(o);
+      //b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
+      b.imageId("conductor-mgt").locationId("default").minRam(6000).options(o);
 
-       // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
-        Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());
+      // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
+      Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());
 
-        System.out.print("");
-    }
-
+      System.out.print("");
+   }
 
 
 //    public void  testVSphereApi() throws RunNodesException, IOException {

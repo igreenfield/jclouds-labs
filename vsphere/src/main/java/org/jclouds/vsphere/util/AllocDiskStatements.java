@@ -27,41 +27,41 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
 public class AllocDiskStatements implements Statement {
 
-  private ImmutableList.Builder<Statement> statements  = ImmutableList.builder();
+   private ImmutableList.Builder<Statement> statements = ImmutableList.builder();
 
-  public void addStatement(Statement element ) {
-    statements.add(element)   ;
-  }
+   public void addStatement(Statement element) {
+      statements.add(element);
+   }
 
-  public Iterable<String> functionDependencies(OsFamily family) {
-    return ImmutableList.of();
-  }
+   public Iterable<String> functionDependencies(OsFamily family) {
+      return ImmutableList.of();
+   }
 
-  public String render(OsFamily family ) {
-    if (family .equals(OsFamily.WINDOWS))
-        throw new UnsupportedOperationException("windows not yet implemented");
+   public String render(OsFamily family) {
+      if (family.equals(OsFamily.WINDOWS))
+         throw new UnsupportedOperationException("windows not yet implemented");
 
-    statements.add(exec("mkdir -p ~/.ssh"));
-    statements.add(exec("restorecon -FRvv ~/.ssh"));
-    statements.add(exec("fdisk /dev/sdb <<EOF"));
-    statements.add(exec("p"));
-    statements.add(exec("n"));
-    statements.add(exec("p"));
-    statements.add(exec("1"));
-    statements.add(exec(""));
-    statements.add(exec(""));
-    statements.add(exec("t"));
-    statements.add(exec("8e"));
-    statements.add(exec("w"));
-    statements.add(exec("EOF"));
-    statements.add(exec("pvcreate /dev/sdb1"));
-    statements.add(exec("vgextend VolGroup /dev/sdb1"));
-    statements.add(exec("free=`vgdisplay VolGroup | grep Free | awk '{ print $7 }'`"));
-    statements.add(exec("alloc=`vgdisplay VolGroup | grep Alloc | awk '{ print $7 }'`"));
-    statements.add(exec("size=-L+`echo $free $alloc | awk '{ printf \"%f\", $1 - $2 }'`G"));
-    statements.add(exec("lvextend $size /dev/VolGroup/lv_root"));
-    statements.add(exec("resize2fs /dev/VolGroup/lv_root"));
+      statements.add(exec("mkdir -p ~/.ssh"));
+      statements.add(exec("restorecon -FRvv ~/.ssh"));
+      statements.add(exec("fdisk /dev/sdb <<EOF"));
+      statements.add(exec("p"));
+      statements.add(exec("n"));
+      statements.add(exec("p"));
+      statements.add(exec("1"));
+      statements.add(exec(""));
+      statements.add(exec(""));
+      statements.add(exec("t"));
+      statements.add(exec("8e"));
+      statements.add(exec("w"));
+      statements.add(exec("EOF"));
+      statements.add(exec("pvcreate /dev/sdb1"));
+      statements.add(exec("vgextend VolGroup /dev/sdb1"));
+      statements.add(exec("free=`vgdisplay VolGroup | grep Free | awk '{ print $7 }'`"));
+      statements.add(exec("alloc=`vgdisplay VolGroup | grep Alloc | awk '{ print $7 }'`"));
+      statements.add(exec("size=-L+`echo $free $alloc | awk '{ printf \"%f\", $1 - $2 }'`G"));
+      statements.add(exec("lvextend $size /dev/VolGroup/lv_root"));
+      statements.add(exec("resize2fs /dev/VolGroup/lv_root"));
 
-    return new StatementList(statements.build()).render(family)   ;
-  }
+      return new StatementList(statements.build()).render(family);
+   }
 }

@@ -39,43 +39,42 @@ import static org.jclouds.compute.util.ComputeServiceUtils.parseVersionOrReturnE
 @Singleton
 public class VirtualMachineToImage implements Function<VirtualMachine, Image> {
 
-    private final Map<VirtualMachinePowerState, Status> toPortableImageStatus;
-    private final Map<OsFamily, Map<String, String>> osVersionMap;
+   private final Map<VirtualMachinePowerState, Status> toPortableImageStatus;
+   private final Map<OsFamily, Map<String, String>> osVersionMap;
 
-    @Inject
-    public VirtualMachineToImage(Map<VirtualMachinePowerState, Status> toPortableImageStatus, Map<OsFamily, Map<String, String>> osVersionMap) {
-        this.toPortableImageStatus = checkNotNull(toPortableImageStatus, "toPortableImageStatus");
-        this.osVersionMap = checkNotNull(osVersionMap, "osVersionMap");
-    }
+   @Inject
+   public VirtualMachineToImage(Map<VirtualMachinePowerState, Status> toPortableImageStatus, Map<OsFamily, Map<String, String>> osVersionMap) {
+      this.toPortableImageStatus = checkNotNull(toPortableImageStatus, "toPortableImageStatus");
+      this.osVersionMap = checkNotNull(osVersionMap, "osVersionMap");
+   }
 
-    @Override
-    public Image apply(@Nullable VirtualMachine from) {
+   @Override
+   public Image apply(@Nullable VirtualMachine from) {
 
-        if (from == null || from.getConfig() == null)
-        {
-            OperatingSystem os = OperatingSystem.builder().description("null").family(OsFamily.UNRECOGNIZED)
-                    .version("null").is64Bit(true).arch("null").build();
-            return new ImageBuilder()
-                    .id("null")
-                    .name("null")
-                    .description("null")
-                    .operatingSystem(os).status(toPortableImageStatus.get(from.getRuntime().getPowerState()))
-                    .build();
-        }
-        String guestFamily = from.getConfig().getGuestId();
-        // TODO every template should contain this annotation ...
-        String annotation =  from.getConfig().getAnnotation();
-        OsFamily family = parseOsFamilyOrUnrecognized(annotation);
-        String version = parseVersionOrReturnEmptyString(family, annotation, osVersionMap);
-        OperatingSystem os = OperatingSystem.builder().description(annotation).family(family)
-                .version(version).is64Bit(true).arch("x86_64").build();
+      if (from == null || from.getConfig() == null) {
+         OperatingSystem os = OperatingSystem.builder().description("null").family(OsFamily.UNRECOGNIZED)
+                 .version("null").is64Bit(true).arch("null").build();
+         return new ImageBuilder()
+                 .id("null")
+                 .name("null")
+                 .description("null")
+                 .operatingSystem(os).status(toPortableImageStatus.get(from.getRuntime().getPowerState()))
+                 .build();
+      }
+      String guestFamily = from.getConfig().getGuestId();
+      // TODO every template should contain this annotation ...
+      String annotation = from.getConfig().getAnnotation();
+      OsFamily family = parseOsFamilyOrUnrecognized(annotation);
+      String version = parseVersionOrReturnEmptyString(family, annotation, osVersionMap);
+      OperatingSystem os = OperatingSystem.builder().description(annotation).family(family)
+              .version(version).is64Bit(true).arch("x86_64").build();
 
-        return new ImageBuilder()
-                .id(from.getName())
-                .name(from.getName())
-                .description(from.getName())
-                .operatingSystem(os).status(toPortableImageStatus.get(from.getRuntime().getPowerState()))
-                .build();
-    }
+      return new ImageBuilder()
+              .id(from.getName())
+              .name(from.getName())
+              .description(from.getName())
+              .operatingSystem(os).status(toPortableImageStatus.get(from.getRuntime().getPowerState()))
+              .build();
+   }
 
 }

@@ -28,137 +28,172 @@ import com.vmware.vim25.mo.VirtualMachine;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.rmi.RemoteException;
+import java.util.Iterator;
 
 /**
  * based on Andrea Turli work.
  */
 public class VSpherePredicate {
 
-    public static final Predicate<VirtualMachine> isTemplatePredicate = new Predicate<VirtualMachine>() {
-        @Override
-        public boolean apply(VirtualMachine virtualMachine) {
-            try {
-                return virtualMachine.getConfig().isTemplate();
-            } catch (Exception e) {
-                return true;
-            }
-        }
+   public static final Predicate<VirtualMachine> isTemplatePredicate = new Predicate<VirtualMachine>() {
+      @Override
+      public boolean apply(VirtualMachine virtualMachine) {
+         try {
+            return virtualMachine.getConfig().isTemplate();
+         } catch (Exception e) {
+            return true;
+         }
+      }
 
-        @Override
-        public String toString() {
-            return "IsTemplatePredicate()";
-        }
-    };
+      @Override
+      public String toString() {
+         return "IsTemplatePredicate()";
+      }
+   };
 
-    public static final Predicate<String> isInet4Address = new Predicate<String>() {
-        @Override
-        public boolean apply(String input) {
-            try {
-                // Note we can do this, as InetAddress is now on the white list
-                return InetAddresses.forString(input) instanceof Inet4Address;
-            } catch (IllegalArgumentException e) {
-                // could be a hostname
-                return false;
-            }
-        }
+   public static final Predicate<String> isInet4Address = new Predicate<String>() {
+      @Override
+      public boolean apply(String input) {
+         try {
+            // Note we can do this, as InetAddress is now on the white list
+            return InetAddresses.forString(input) instanceof Inet4Address;
+         } catch (IllegalArgumentException e) {
+            // could be a hostname
+            return false;
+         }
+      }
 
-    };
+   };
 
-    public static final Predicate<String> isInet6Address = new Predicate<String>() {
-        @Override
-        public boolean apply(String input) {
-            try {
-                // Note we can do this, as InetAddress is now on the white list
-                return InetAddresses.forString(input) instanceof Inet6Address;
-            } catch (IllegalArgumentException e) {
-                // could be a hostname
-                return false;
-            }
-        }
+   public static final Predicate<String> isInet6Address = new Predicate<String>() {
+      @Override
+      public boolean apply(String input) {
+         try {
+            // Note we can do this, as InetAddress is now on the white list
+            return InetAddresses.forString(input) instanceof Inet6Address;
+         } catch (IllegalArgumentException e) {
+            // could be a hostname
+            return false;
+         }
+      }
 
-    };
+   };
 
-    public static Predicate<ResourcePool> isResourcePoolOf(String hostname) {
-        return new IsResourcePoolOf(hostname);
-    }
+   public static Predicate<ResourcePool> isResourcePoolOf(String hostname) {
+      return new IsResourcePoolOf(hostname);
+   }
 
-    public static Predicate<VirtualMachine> IsToolsStatusEquals(VirtualMachineToolsStatus status) {
-        return new IsToolsStatusEquals(status);
-    }
+   public static Predicate<VirtualMachine> IsToolsStatusEquals(VirtualMachineToolsStatus status) {
+      return new IsToolsStatusEquals(status);
+   }
 
-    public static Predicate<VirtualMachine> hasMORid(String morId) {
-        return new hasMORid(morId);
-    }
+   public static Predicate<VirtualMachine> hasMORid(String morId) {
+      return new hasMORid(morId);
+   }
+
+   public static Predicate<VirtualMachine> isNodeIdInList(Iterable<String> ids) {
+      return new IsNodeIdInList(ids);
+   }
 }
 
 class hasMORid implements Predicate<VirtualMachine> {
-    private String morId = null;
+   private String morId = null;
 
-    hasMORid(String morId) {
-        this.morId = morId;
-    }
+   hasMORid(String morId) {
+      this.morId = morId;
+   }
 
-    @Override
-    public boolean apply(VirtualMachine input) {
-        return input.getMOR().getVal().equals(morId);
-    }
+   @Override
+   public boolean apply(VirtualMachine input) {
+      return input.getMOR().getVal().equals(morId);
+   }
 
-    @Override
-    public String toString() {
-        return "hasMORid";
-    }
+   @Override
+   public String toString() {
+      return "hasMORid";
+   }
 }
 
 class IsResourcePoolOf implements Predicate<ResourcePool> {
 
-    private String hostname;
+   private String hostname;
 
-    IsResourcePoolOf(String hostname) {
-        this.hostname = hostname;
-    }
+   IsResourcePoolOf(String hostname) {
+      this.hostname = hostname;
+   }
 
-    @Override
-    public boolean apply(ResourcePool input) {
-        try {
-            for (HostSystem hostSystem : input.getOwner().getHosts()) {
-                if (hostSystem.getName().equals(hostname))
-                    return true;
-            }
-        } catch (RemoteException e) {
-            return false;
-        }
-        return false;
-    }
+   @Override
+   public boolean apply(ResourcePool input) {
+      try {
+         for (HostSystem hostSystem : input.getOwner().getHosts()) {
+            if (hostSystem.getName().equals(hostname))
+               return true;
+         }
+      } catch (RemoteException e) {
+         return false;
+      }
+      return false;
+   }
 
-    @Override
-    public String toString() {
-        return "IsResourcePoolOf";
-    }
+   @Override
+   public String toString() {
+      return "IsResourcePoolOf";
+   }
 
 }
 
 class IsToolsStatusEquals implements Predicate<VirtualMachine> {
 
-    private VirtualMachineToolsStatus status;
+   private VirtualMachineToolsStatus status;
 
-    IsToolsStatusEquals(VirtualMachineToolsStatus status) {
-        this.status = status;
-    }
+   IsToolsStatusEquals(VirtualMachineToolsStatus status) {
+      this.status = status;
+   }
 
-    @Override
-    public boolean apply(VirtualMachine input) {
-        try {
-            if (input.getGuest().getToolsStatus().equals(status))
-                return true;
-        } catch (Exception e) {
-            return false;
-        }
-        return false;
-    }
+   @Override
+   public boolean apply(VirtualMachine input) {
+      try {
+         if (input.getGuest().getToolsStatus().equals(status))
+            return true;
+      } catch (Exception e) {
+         return false;
+      }
+      return false;
+   }
 
-    @Override
-    public String toString() {
-        return "IsToolsStatusEquals";
-    }
+   @Override
+   public String toString() {
+      return "IsToolsStatusEquals";
+   }
+
+}
+
+class IsNodeIdInList implements Predicate<VirtualMachine> {
+
+   private Iterable<String> ids;
+
+   IsNodeIdInList(Iterable<String> ids) {
+      this.ids = ids;
+   }
+
+   @Override
+   public boolean apply(VirtualMachine input) {
+      try {
+         Iterator<String> iterator = ids.iterator();
+         while (iterator.hasNext()) {
+            String id = iterator.next();
+            if (input.getName().equals(id))
+               return true;
+         }
+      } catch (Exception e) {
+         return false;
+      }
+      return false;
+   }
+
+   @Override
+   public String toString() {
+      return "IsToolsStatusEquals";
+   }
 
 }

@@ -35,37 +35,37 @@ import java.io.IOException;
 
 @Singleton
 public class VSphereTemplateLoader extends CacheLoader<String, Optional<VirtualMachine>> {
-    @Resource
-    protected Logger logger = Logger.NULL;
+   @Resource
+   protected Logger logger = Logger.NULL;
 
-    private final Supplier<VSphereServiceInstance> serviceInstance;
+   private final Supplier<VSphereServiceInstance> serviceInstance;
 
-    @Inject
-    VSphereTemplateLoader(Supplier<VSphereServiceInstance> serviceInstance) {
-        this.serviceInstance = serviceInstance;
-    }
+   @Inject
+   VSphereTemplateLoader(Supplier<VSphereServiceInstance> serviceInstance) {
+      this.serviceInstance = serviceInstance;
+   }
 
-    @Override
-    public Optional<VirtualMachine> load(String vmName) {
-        Closer closer = Closer.create();
-        VSphereServiceInstance instance = serviceInstance.get();
-        closer.register(instance);
-        try {
-            try {
-                VirtualMachine vm = (VirtualMachine) new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntity("VirtualMachine", vmName);
-                if (VSpherePredicate.isTemplatePredicate.apply(vm)) {
-                    return Optional.of(vm);
-                }
-            } catch (Exception e) {
-                logger.error("Can't find template", e);
-                throw closer.rethrow(e);
-            } finally {
-                closer.close();
+   @Override
+   public Optional<VirtualMachine> load(String vmName) {
+      Closer closer = Closer.create();
+      VSphereServiceInstance instance = serviceInstance.get();
+      closer.register(instance);
+      try {
+         try {
+            VirtualMachine vm = (VirtualMachine) new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntity("VirtualMachine", vmName);
+            if (VSpherePredicate.isTemplatePredicate.apply(vm)) {
+               return Optional.of(vm);
             }
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            return Optional.absent();
-        }
-    }
+         } catch (Exception e) {
+            logger.error("Can't find template", e);
+            throw closer.rethrow(e);
+         } finally {
+            closer.close();
+         }
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      } finally {
+         return Optional.absent();
+      }
+   }
 }

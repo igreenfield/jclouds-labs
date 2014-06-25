@@ -27,37 +27,37 @@ import java.io.Closeable;
 import java.io.IOException;
 
 public class VSphereHost implements Closeable {
-    private VSphereServiceInstance serviceInstance;
-    private HostSystem host;
+   private VSphereServiceInstance serviceInstance;
+   private HostSystem host;
 
-    public VSphereHost(HostSystem host, VSphereServiceInstance serviceInstance) {
-        this.host = host;
-        this.serviceInstance = serviceInstance;
-    }
+   public VSphereHost(HostSystem host, VSphereServiceInstance serviceInstance) {
+      this.host = host;
+      this.serviceInstance = serviceInstance;
+   }
 
-    public HostSystem getHost() {
-        return host;
-    }
+   public HostSystem getHost() {
+      return host;
+   }
 
 
-    public Datastore getDatastore() {
-        Datastore datastore = null;
-        long freeSpace = 0;
-        try {
-            for (Datastore d : host.getDatastores()) {
-                if (d.getSummary().getFreeSpace() > freeSpace) {
-                    freeSpace = d.getSummary().getFreeSpace();
-                    datastore = d;
-                }
+   public Datastore getDatastore() {
+      Datastore datastore = null;
+      long freeSpace = 0;
+      try {
+         for (Datastore d : host.getDatastores()) {
+            if (d.getSummary().getFreeSpace() > freeSpace) {
+               freeSpace = d.getSummary().getFreeSpace();
+               datastore = d;
             }
-        } catch (Throwable e) {
-            Throwables.propagate(e);
-        }
-        return datastore;
-    }
+         }
+      } catch (Throwable e) {
+         Throwables.propagate(e);
+      }
+      return datastore;
+   }
 
-    @Override
-    public void close() throws IOException {
-        serviceInstance.close();
-    }
+   @Override
+   public void close() throws IOException {
+      serviceInstance.close();
+   }
 }

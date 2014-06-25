@@ -45,51 +45,51 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class VSphereLocationSupplier implements LocationsSupplier {
 
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    private Supplier<VSphereServiceInstance> serviceInstance;
+   private Supplier<VSphereServiceInstance> serviceInstance;
 
-    @Inject
-    public VSphereLocationSupplier(Supplier<VSphereServiceInstance> serviceInstance) {
-        this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
-    }
+   @Inject
+   public VSphereLocationSupplier(Supplier<VSphereServiceInstance> serviceInstance) {
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
+   }
 
-    private Set<? extends Location> getClusters() {
-        Set<Location> hosts = Sets.newHashSet();
-        Closer closer = Closer.create();
-        VSphereServiceInstance instance = serviceInstance.get();
-        closer.register(instance);
-        try {
-            try {
+   private Set<? extends Location> getClusters() {
+      Set<Location> hosts = Sets.newHashSet();
+      Closer closer = Closer.create();
+      VSphereServiceInstance instance = serviceInstance.get();
+      closer.register(instance);
+      try {
+         try {
 
-                ManagedEntity[] clusterEntities = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("ClusterComputeResource");
+            ManagedEntity[] clusterEntities = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("ClusterComputeResource");
 
-                for (ManagedEntity cluster : clusterEntities) {
-                    Location location = new LocationImpl(LocationScope.ZONE, cluster.getName(), cluster.getName(), null, ImmutableSet.of(""), Maps.<String, Object>newHashMap());
-                    hosts.add(location);
-                }
-
-                hosts.add(new LocationImpl(LocationScope.ZONE, "default", "default", null, ImmutableSet.of(""), Maps.<String, Object>newHashMap()));
-
-                return hosts;
-            } catch (Exception e) {
-                logger.error("Problem in finding a valid cluster", e);
-                closer.rethrow(e);
-            } finally {
-                closer.close();
+            for (ManagedEntity cluster : clusterEntities) {
+               Location location = new LocationImpl(LocationScope.ZONE, cluster.getName(), cluster.getName(), null, ImmutableSet.of(""), Maps.<String, Object>newHashMap());
+               hosts.add(location);
             }
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
 
-        return hosts;
-    }
+            hosts.add(new LocationImpl(LocationScope.ZONE, "default", "default", null, ImmutableSet.of(""), Maps.<String, Object>newHashMap()));
 
-    @Override
-    public Set<? extends Location> get() {
-        return ImmutableSet.copyOf(getClusters());
-    }
+            return hosts;
+         } catch (Exception e) {
+            logger.error("Problem in finding a valid cluster", e);
+            closer.rethrow(e);
+         } finally {
+            closer.close();
+         }
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
+
+      return hosts;
+   }
+
+   @Override
+   public Set<? extends Location> get() {
+      return ImmutableSet.copyOf(getClusters());
+   }
 
 }

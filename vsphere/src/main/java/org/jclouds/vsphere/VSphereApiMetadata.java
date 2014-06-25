@@ -33,59 +33,59 @@ import static org.jclouds.reflect.Reflection2.typeToken;
 
 /**
  * Implementation of {@link BaseHttpApiMetadata} for vSphere 5.1 API
- *
+ * <p/>
  * based on Andrea Turli work.
  */
 public class VSphereApiMetadata extends BaseHttpApiMetadata<VSphereApi> {
 
 
-    @Override
-    public Builder toBuilder() {
-        return new Builder().fromApiMetadata(this);
-    }
+   @Override
+   public Builder toBuilder() {
+      return new Builder().fromApiMetadata(this);
+   }
 
-    public VSphereApiMetadata() {
-        this(new Builder());
-    }
+   public VSphereApiMetadata() {
+      this(new Builder());
+   }
 
-    protected VSphereApiMetadata(Builder builder) {
-        super(builder);
-    }
+   protected VSphereApiMetadata(Builder builder) {
+      super(builder);
+   }
 
-    public static Properties defaultProperties() {
-        Properties properties = BaseHttpApiMetadata.defaultProperties();
-        properties.setProperty(PROPERTY_SESSION_INTERVAL, 8 * 60 + "");
-        properties.setProperty("jclouds.dns_name_length_min", "1");
-        properties.setProperty("jclouds.dns_name_length_max", "80");
-        properties.setProperty(PROPERTY_SESSION_INTERVAL, 300 + "");
-        properties.setProperty(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD, "master");
-        properties.setProperty(VSphereConstants.CLONING, "full");
-        return properties;
-    }
+   public static Properties defaultProperties() {
+      Properties properties = BaseHttpApiMetadata.defaultProperties();
+      properties.setProperty(PROPERTY_SESSION_INTERVAL, 8 * 60 + "");
+      properties.setProperty("jclouds.dns_name_length_min", "1");
+      properties.setProperty("jclouds.dns_name_length_max", "80");
+      properties.setProperty(PROPERTY_SESSION_INTERVAL, 300 + "");
+      properties.setProperty(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD, "master");
+      properties.setProperty(VSphereConstants.CLONING, "full");
+      return properties;
+   }
 
-    public static class Builder extends BaseHttpApiMetadata.Builder<VSphereApi, Builder> {
-        protected Builder() {
-            id("vsphere")
-                    .name("vSphere 5.1 API")
-                    .identityName("user")
-                    .credentialName("password")
-                    .endpointName("ESXi endpoint or vCenter server")
-                   // .defaultEndpoint("https://localhost/sdk")
-                    .documentation(URI.create("http://www.vmware.com/support/pubs/vcd_pubs.html"))
-                    .version("5.1")
-                    .defaultProperties(VSphereApiMetadata.defaultProperties())
-                    .view(typeToken(ComputeServiceContext.class))
-                    .defaultModules(ImmutableSet.<Class<? extends Module>>of(VSphereComputeServiceContextModule.class));
-        }
+   public static class Builder extends BaseHttpApiMetadata.Builder<VSphereApi, Builder> {
+      protected Builder() {
+         id("vsphere")
+                 .name("vSphere 5.1 API")
+                 .identityName("user")
+                 .credentialName("password")
+                 .endpointName("ESXi endpoint or vCenter server")
+                         // .defaultEndpoint("https://localhost/sdk")
+                 .documentation(URI.create("http://www.vmware.com/support/pubs/vcd_pubs.html"))
+                 .version("5.1")
+                 .defaultProperties(VSphereApiMetadata.defaultProperties())
+                 .view(typeToken(ComputeServiceContext.class))
+                 .defaultModules(ImmutableSet.<Class<? extends Module>>of(VSphereComputeServiceContextModule.class));
+      }
 
-        @Override
-        public VSphereApiMetadata build() {
-            return new VSphereApiMetadata(this);
-        }
+      @Override
+      public VSphereApiMetadata build() {
+         return new VSphereApiMetadata(this);
+      }
 
-        @Override
-        protected Builder self() {
-            return this;
-        }
-    }
+      @Override
+      protected Builder self() {
+         return this;
+      }
+   }
 }

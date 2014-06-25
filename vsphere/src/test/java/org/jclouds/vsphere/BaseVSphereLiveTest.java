@@ -20,22 +20,19 @@
 package org.jclouds.vsphere;
 
 import com.vmware.vim25.mo.ServiceInstance;
-import org.testng.annotations.Test;
 
 import java.net.URL;
 
 /**
- * CISCO LTD.
- * User: igreenfi
  * Date: 18/05/2014 3:42 PM
  * Package: org.jclouds.vsphere
  */
 public class BaseVSphereLiveTest {
-    //@Test
-    public void testTestUploadFile() throws Exception {
-        ServiceInstance si = new ServiceInstance(new URL("https://10.45.7.70/sdk"), "root", "vmware", true);
-        //si.getFileManager().makeDirectory();
-    }
+   //@Test
+   public void testTestUploadFile() throws Exception {
+      ServiceInstance si = new ServiceInstance(new URL("https://10.45.7.70/sdk"), "root", "vmware", true);
+      //si.getFileManager().makeDirectory();
+   }
 
 
 }

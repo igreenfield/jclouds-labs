@@ -44,58 +44,58 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class VirtualMachineToSshClient implements Function<VirtualMachine, SshClient> {
 
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD)
-    protected String password = null;
+   @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD)
+   protected String password = null;
 
-    private final SshClient.Factory sshClientFactory;
+   private final SshClient.Factory sshClientFactory;
 
-    @Inject
-    public VirtualMachineToSshClient(SshClient.Factory sshClientFactory) {
-        this.sshClientFactory = sshClientFactory;
-    }
+   @Inject
+   public VirtualMachineToSshClient(SshClient.Factory sshClientFactory) {
+      this.sshClientFactory = sshClientFactory;
+   }
 
-    @Override
-    public SshClient apply(final VirtualMachine vm) {
-        SshClient client = null;
-        String clientIpAddress = vm.getGuest().getIpAddress();
-        String sshPort = "22";
-        while (!vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || clientIpAddress.isEmpty()) {
-            int timeoutValue = 1000;
-            int timeoutUnits = 500;
-            Predicate<String> tester = Predicates2.retry(
-                    ipAddressTester, timeoutValue, timeoutUnits,
-                    TimeUnit.MILLISECONDS);
-            boolean passed = false;
-            while (vm.getRuntime().getPowerState()
-                    .equals(VirtualMachinePowerState.poweredOn)
-                    && !passed) {
-                clientIpAddress = Strings.nullToEmpty(vm.getGuest()
-                        .getIpAddress());
-                passed = tester.apply(clientIpAddress);
-            }
-        }
-        LoginCredentials loginCredentials = LoginCredentials.builder()
-                .user("root").password(password)
-                .build();
-        checkNotNull(clientIpAddress, "clientIpAddress");
-        client = sshClientFactory.create(
-                HostAndPort.fromParts(clientIpAddress, Integer.parseInt(sshPort)),
-                loginCredentials);
-        checkNotNull(client);
-        return client;
-    }
+   @Override
+   public SshClient apply(final VirtualMachine vm) {
+      SshClient client = null;
+      String clientIpAddress = vm.getGuest().getIpAddress();
+      String sshPort = "22";
+      while (!vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || clientIpAddress.isEmpty()) {
+         int timeoutValue = 1000;
+         int timeoutUnits = 500;
+         Predicate<String> tester = Predicates2.retry(
+                 ipAddressTester, timeoutValue, timeoutUnits,
+                 TimeUnit.MILLISECONDS);
+         boolean passed = false;
+         while (vm.getRuntime().getPowerState()
+                 .equals(VirtualMachinePowerState.poweredOn)
+                 && !passed) {
+            clientIpAddress = Strings.nullToEmpty(vm.getGuest()
+                    .getIpAddress());
+            passed = tester.apply(clientIpAddress);
+         }
+      }
+      LoginCredentials loginCredentials = LoginCredentials.builder()
+              .user("root").password(password)
+              .build();
+      checkNotNull(clientIpAddress, "clientIpAddress");
+      client = sshClientFactory.create(
+              HostAndPort.fromParts(clientIpAddress, Integer.parseInt(sshPort)),
+              loginCredentials);
+      checkNotNull(client);
+      return client;
+   }
 
-    Predicate<String> ipAddressTester = new Predicate<String>() {
+   Predicate<String> ipAddressTester = new Predicate<String>() {
 
-        @Override
-        public boolean apply(String input) {
-            return !input.isEmpty();
-        }
+      @Override
+      public boolean apply(String input) {
+         return !input.isEmpty();
+      }
 
-    };
+   };
 
 }

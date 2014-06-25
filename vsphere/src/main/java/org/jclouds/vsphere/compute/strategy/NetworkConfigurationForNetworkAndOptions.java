@@ -21,38 +21,23 @@ package org.jclouds.vsphere.compute.strategy;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.domain.network.NetworkConfig;
 
-import javax.inject.Inject;
 import java.util.Set;
 
 /**
- * 
  * based on Andrea Turli work.
  */
 public class NetworkConfigurationForNetworkAndOptions {
    protected final NetworkConfig defaultNetworkConfig;
 
-   @Inject
    protected NetworkConfigurationForNetworkAndOptions() {
       this.defaultNetworkConfig = new NetworkConfig("default");
 
    }
 
-   /**
-    * 
-    * returns a {@link NetworkConfig} used to instantiate a vAppTemplate to
-    * either the default parent (org) network, or one specified by options.
-    * 
-    * @param networkName
-    *           network defined in the vSphere you wish to connect to
-    * @param vOptions
-    *           options to override defaults with
-    * @return
-    */
    public NetworkConfig apply(String networkName, VSphereTemplateOptions vOptions) {
       NetworkConfig config;
       String userDefinedAddressType = vOptions.getAddressType();
       Set<String> userDefinedNetworks = vOptions.getNetworks();
-      //FenceMode fenceMode = vOptions.getFenceMode() != null ? vOptions.getFenceMode() : defaultFenceMode;
       if (userDefinedAddressType != null) {
          config = NetworkConfig.builder().networkName(networkName).addressType(userDefinedAddressType).build();
       } else {

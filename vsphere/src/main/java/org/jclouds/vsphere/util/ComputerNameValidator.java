@@ -22,16 +22,16 @@ import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.predicates.validators.DnsNameValidator;
 
 public enum ComputerNameValidator {
-    INSTANCE;
+   INSTANCE;
 
-    private DnsNameValidator validator;
+   private DnsNameValidator validator;
 
-    ComputerNameValidator() {
-        this.validator = new DnsNameValidator(3, 30);
-    }
+   ComputerNameValidator() {
+      this.validator = new DnsNameValidator(3, 30);
+   }
 
-    public void validate(@Nullable String t) throws IllegalArgumentException {
-        this.validator.validate(t);
-    }
+   public void validate(@Nullable String t) throws IllegalArgumentException {
+      this.validator.validate(t);
+   }
 
 }
