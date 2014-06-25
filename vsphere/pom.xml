@@ -92,11 +92,6 @@
             <artifactId>vijava</artifactId>
             <version>5.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.codehaus.mojo.enchanter</groupId>
-            <artifactId>enchanter-core</artifactId>
-            <version>1.0-beta-1</version>
-        </dependency>
     </dependencies>
 
     <profiles>
