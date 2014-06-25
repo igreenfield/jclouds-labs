@@ -35,15 +35,15 @@ import java.rmi.RemoteException;
  */
 public interface IFileManager {
 
-   public void uploadFile(String srcFilePath, String destDirectory) throws IOException;
+   void uploadFile(String srcFilePath, String destDirectory) throws IOException;
 
-   public void changeOwner(java.lang.String name, Datacenter datacenter, java.lang.String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException;
+   void changeOwner(java.lang.String name, Datacenter datacenter, java.lang.String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException;
 
-   public Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 
-   public Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 
-   public void makeDirectory(String name, Datacenter datacenter, boolean createParentDirectories) throws FileFault, InvalidDatastore, RuntimeFault, java.rmi.RemoteException;
+   void makeDirectory(String name, Datacenter datacenter, boolean createParentDirectories) throws FileFault, InvalidDatastore, RuntimeFault, java.rmi.RemoteException;
 
-   public Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 }

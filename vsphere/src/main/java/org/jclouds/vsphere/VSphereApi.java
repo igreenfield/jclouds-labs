@@ -18,7 +18,31 @@
  */
 package org.jclouds.vsphere;
 
-import com.vmware.vim25.mo.*;
+import com.vmware.vim25.mo.AlarmManager;
+import com.vmware.vim25.mo.AuthorizationManager;
+import com.vmware.vim25.mo.ClusterProfileManager;
+import com.vmware.vim25.mo.CustomFieldsManager;
+import com.vmware.vim25.mo.CustomizationSpecManager;
+import com.vmware.vim25.mo.DiagnosticManager;
+import com.vmware.vim25.mo.DistributedVirtualSwitchManager;
+import com.vmware.vim25.mo.EventManager;
+import com.vmware.vim25.mo.ExtensionManager;
+import com.vmware.vim25.mo.Folder;
+import com.vmware.vim25.mo.GuestOperationsManager;
+import com.vmware.vim25.mo.HostLocalAccountManager;
+import com.vmware.vim25.mo.HostProfileManager;
+import com.vmware.vim25.mo.IpPoolManager;
+import com.vmware.vim25.mo.LicenseManager;
+import com.vmware.vim25.mo.LocalizationManager;
+import com.vmware.vim25.mo.OptionManager;
+import com.vmware.vim25.mo.PerformanceManager;
+import com.vmware.vim25.mo.ProfileComplianceManager;
+import com.vmware.vim25.mo.ScheduledTaskManager;
+import com.vmware.vim25.mo.ServerConnection;
+import com.vmware.vim25.mo.SessionManager;
+import com.vmware.vim25.mo.TaskManager;
+import com.vmware.vim25.mo.ViewManager;
+import com.vmware.vim25.mo.VirtualDiskManager;
 import org.jclouds.rest.annotations.Delegate;
 
 import java.io.Closeable;
