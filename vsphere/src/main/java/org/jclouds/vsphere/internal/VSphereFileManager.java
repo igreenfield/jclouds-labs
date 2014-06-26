@@ -89,12 +89,12 @@ public class VSphereFileManager implements FileManagerApi {
    }
 
    @Override
-   public Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+   public Task copyDatastoreFileTask(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
    }
 
    @Override
-   public Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+   public Task deleteDatastoreFileTask(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
    }
 
@@ -104,7 +104,7 @@ public class VSphereFileManager implements FileManagerApi {
    }
 
    @Override
-   public Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
+   public Task moveDatastoreFileTask(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException {
       return null;  //To change body of implemented methods use File | Settings | File Templates.
    }
 }

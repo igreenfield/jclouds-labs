@@ -35,15 +35,32 @@ import java.rmi.RemoteException;
  */
 public interface FileManagerApi {
 
+    /**
+     * Upload one file to the active host.
+     * @param srcFilePath full path to source file 
+     * @param destDirectory full path of destination directory on datastore
+     * @throws IOException
+     */
    void uploadFile(String srcFilePath, String destDirectory) throws IOException;
 
-   void changeOwner(java.lang.String name, Datacenter datacenter, java.lang.String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException;
+    /**
+     * Change oner of one file on datastore.
+     * @param name
+     * @param datacenter
+     * @param owner
+     * @throws InvalidDatastore
+     * @throws FileFault
+     * @throws UserNotFound
+     * @throws RuntimeFault
+     * @throws RemoteException
+     */
+   void changeOwner(String name, Datacenter datacenter, String owner) throws InvalidDatastore, FileFault, UserNotFound, RuntimeFault, RemoteException;
 
-   Task copyDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task copyDatastoreFileTask(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 
-   Task deleteDatastoreFile_Task(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task deleteDatastoreFileTask(String name, Datacenter datacenter) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 
    void makeDirectory(String name, Datacenter datacenter, boolean createParentDirectories) throws FileFault, InvalidDatastore, RuntimeFault, java.rmi.RemoteException;
 
-   Task moveDatastoreFile_Task(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
+   Task moveDatastoreFileTask(String sourceName, Datacenter sourceDatacenter, String destinationName, Datacenter destinationDatacenter, boolean force) throws FileFault, InvalidDatastore, RuntimeFault, RemoteException;
 }

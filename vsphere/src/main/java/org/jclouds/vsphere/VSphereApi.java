@@ -18,29 +18,6 @@
  */
 package org.jclouds.vsphere;
 
-import com.vmware.vim25.mo.AuthorizationManager;
-import com.vmware.vim25.mo.CustomFieldsManager;
-import com.vmware.vim25.mo.CustomizationSpecManager;
-import com.vmware.vim25.mo.DiagnosticManager;
-import com.vmware.vim25.mo.DistributedVirtualSwitchManager;
-import com.vmware.vim25.mo.EventManager;
-import com.vmware.vim25.mo.ExtensionManager;
-import com.vmware.vim25.mo.Folder;
-import com.vmware.vim25.mo.GuestOperationsManager;
-import com.vmware.vim25.mo.HostLocalAccountManager;
-import com.vmware.vim25.mo.HostProfileManager;
-import com.vmware.vim25.mo.IpPoolManager;
-import com.vmware.vim25.mo.LicenseManager;
-import com.vmware.vim25.mo.LocalizationManager;
-import com.vmware.vim25.mo.OptionManager;
-import com.vmware.vim25.mo.PerformanceManager;
-import com.vmware.vim25.mo.ProfileComplianceManager;
-import com.vmware.vim25.mo.ScheduledTaskManager;
-import com.vmware.vim25.mo.ServerConnection;
-import com.vmware.vim25.mo.SessionManager;
-import com.vmware.vim25.mo.TaskManager;
-import com.vmware.vim25.mo.ViewManager;
-import com.vmware.vim25.mo.VirtualDiskManager;
 import org.jclouds.rest.annotations.Delegate;
 
 import java.io.Closeable;
@@ -50,85 +27,78 @@ import java.io.Closeable;
  * <p/>
  *
  * @see <a href="https://communities.vmware.com/community/vmtn/developer/forums/vspherewebsdk" />
- * based on Andrea Turli work.
+ *      based on Andrea Turli work.
  */
 public interface VSphereApi extends Closeable {
-   @Delegate
-   ClusterProfileManagerApi getClusterProfileManagerApi();
+    @Delegate
+    ClusterProfileManagerApi getClusterProfileManagerApi();
 
-   @Delegate
-   AlarmManagerApi getAlarmManagerApi();
+    @Delegate
+    AlarmManagerApi getAlarmManagerApi();
 
-   @Delegate
-   AuthorizationManager getAuthorizationManagerApi();
+    @Delegate
+    AuthorizationManagerApi getAuthorizationManagerApi();
 
-   @Delegate
-   CustomFieldsManager getCustomFieldsManagerApi();
+    @Delegate
+    CustomFieldsManagerApi getCustomFieldsManagerApi();
 
-   @Delegate
-   CustomizationSpecManager getCustomizationSpecManagerApi();
+    @Delegate
+    CustomizationSpecManagerApi getCustomizationSpecManagerApi();
 
-   @Delegate
-   EventManager getEventManagerApi();
+    @Delegate
+    EventManagerApi getEventManagerApi();
 
-   @Delegate
-   DiagnosticManager getDiagnosticManagerApi();
+    @Delegate
+    DiagnosticManagerApi getDiagnosticManagerApi();
 
-   @Delegate
-   DistributedVirtualSwitchManager getDistributedVirtualSwitchManagerApi();
+    @Delegate
+    DistributedVirtualSwitchManagerApi getDistributedVirtualSwitchManagerApi();
 
-   @Delegate
-   ExtensionManager getExtensionManagerApi();
+    @Delegate
+    ExtensionManagerApi getExtensionManagerApi();
 
-   @Delegate
-   FileManagerApi getFileManagerApi();
+    @Delegate
+    FileManagerApi getFileManagerApi();
 
-   @Delegate
-   GuestOperationsManager getGuestOperationsManagerApi();
+    @Delegate
+    GuestOperationsManagerApi getGuestOperationsManagerApi();
 
-   @Delegate
-   HostLocalAccountManager getAccountManagerApi();
+    @Delegate
+    HostLocalAccountManagerApi getAccountManagerApi();
 
-   @Delegate
-   LicenseManager getLicenseManagerApi();
+    @Delegate
+    LicenseManagerApi getLicenseManagerApi();
 
-   @Delegate
-   LocalizationManager getLocalizationManagerApi();
+    @Delegate
+    LocalizationManagerApi getLocalizationManagerApi();
 
-   @Delegate
-   PerformanceManager getPerformanceManagerApi();
+    @Delegate
+    PerformanceManagerApi getPerformanceManagerApi();
 
-   @Delegate
-   ProfileComplianceManager getProfileComplianceManagerApi();
+    @Delegate
+    ProfileComplianceManagerApi getProfileComplianceManagerApi();
 
-   @Delegate
-   ScheduledTaskManager getScheduledTaskManagerApi();
+    @Delegate
+    ScheduledTaskManagerApi getScheduledTaskManagerApi();
 
-   @Delegate
-   SessionManager getSessionManagerApi();
+    @Delegate
+    SessionManagerApi getSessionManagerApi();
 
-   @Delegate
-   HostProfileManager getHostProfileManagerApi();
+    @Delegate
+    HostProfileManagerApi getHostProfileManagerApi();
 
-   @Delegate
-   IpPoolManager getIpPoolManagerApi();
+    @Delegate
+    IpPoolManagerApi getIpPoolManagerApi();
 
-   @Delegate
-   TaskManager getTaskManagerApi();
+    @Delegate
+    TaskManagerApi getTaskManagerApi();
 
-   @Delegate
-   ViewManager getViewManagerApi();
+    @Delegate
+    ViewManagerApi getViewManagerApi();
 
-   @Delegate
-   VirtualDiskManager getVirtualDiskManagerApi();
+    @Delegate
+    VirtualDiskManagerApi getVirtualDiskManagerApi();
 
-   @Delegate
-   OptionManager getOptionManagerApi();
-
-   @Delegate
-   Folder getRootFolder();
-
-   @Delegate
-   ServerConnection getServerConnection();
-
+    @Delegate
+    OptionManagerApi getOptionManagerApi();
 }
