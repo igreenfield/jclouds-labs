@@ -82,7 +82,7 @@ public class ContextBuilderTest {
 //                .modules(modules)
 //                .buildInjector();
 //
-//        IFileManager fileManagerApi = injector.getInstance(IFileManager.class);
+//        FileManagerApi fileManagerApi = injector.getInstance(FileManagerApi.class);
 //        fileManagerApi.uploadFile("C:/Users/igreenfi/Desktop/image.flp", "test5/image.flp");
 //
 ////        VSphereRestClient client = new VSphereRestClient("https://10.45.7.70","root","vmware");

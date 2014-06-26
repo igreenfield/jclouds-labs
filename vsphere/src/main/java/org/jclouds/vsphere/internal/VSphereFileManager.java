@@ -29,7 +29,7 @@ import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.Task;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.logging.Logger;
-import org.jclouds.vsphere.IFileManager;
+import org.jclouds.vsphere.FileManagerApi;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.suppliers.VSphereHostSupplier;
@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Date: 18/05/2014 6:00 PM
  * Package: org.jclouds.vsphere.internal
  */
-public class VSphereFileManager implements IFileManager {
+public class VSphereFileManager implements FileManagerApi {
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
    protected Logger logger = Logger.NULL;

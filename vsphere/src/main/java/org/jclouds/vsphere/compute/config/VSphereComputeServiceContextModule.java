@@ -42,7 +42,7 @@ import org.jclouds.domain.Location;
 import org.jclouds.functions.IdentityFunction;
 import org.jclouds.location.suppliers.LocationsSupplier;
 import org.jclouds.ssh.SshClient;
-import org.jclouds.vsphere.IFileManager;
+import org.jclouds.vsphere.FileManagerApi;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
@@ -76,7 +76,7 @@ public class VSphereComputeServiceContextModule extends
       bind(ComputeService.class).to(VSphereComputeService.class);
       bind(TemplateOptions.class).to(VSphereTemplateOptions.class);
       bind(LocationsSupplier.class).to(VSphereLocationSupplier.class);
-      bind(IFileManager.class).to(VSphereFileManager.class);
+      bind(FileManagerApi.class).to(VSphereFileManager.class);
 
       bind(new TypeLiteral<ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location>>() {
       }).to(VSphereComputeServiceAdapter.class);

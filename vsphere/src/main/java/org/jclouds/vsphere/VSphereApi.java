@@ -18,9 +18,7 @@
  */
 package org.jclouds.vsphere;
 
-import com.vmware.vim25.mo.AlarmManager;
 import com.vmware.vim25.mo.AuthorizationManager;
-import com.vmware.vim25.mo.ClusterProfileManager;
 import com.vmware.vim25.mo.CustomFieldsManager;
 import com.vmware.vim25.mo.CustomizationSpecManager;
 import com.vmware.vim25.mo.DiagnosticManager;
@@ -56,10 +54,10 @@ import java.io.Closeable;
  */
 public interface VSphereApi extends Closeable {
    @Delegate
-   ClusterProfileManager getClusterProfileManagerApi();
+   ClusterProfileManagerApi getClusterProfileManagerApi();
 
    @Delegate
-   AlarmManager getAlarmManagerApi();
+   AlarmManagerApi getAlarmManagerApi();
 
    @Delegate
    AuthorizationManager getAuthorizationManagerApi();
@@ -83,7 +81,7 @@ public interface VSphereApi extends Closeable {
    ExtensionManager getExtensionManagerApi();
 
    @Delegate
-   IFileManager getFileManagerApi();
+   FileManagerApi getFileManagerApi();
 
    @Delegate
    GuestOperationsManager getGuestOperationsManagerApi();
