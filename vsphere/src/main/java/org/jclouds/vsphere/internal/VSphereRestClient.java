@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Date: 19/05/2014 9:04 AM
  * Package: org.jclouds.vsphere.internal
@@ -39,7 +41,7 @@ public class VSphereRestClient {
    }
 
    public VSphereRestClient(String serverUrl) {
-      this.baseUrl = serverUrl;
+      this.baseUrl = checkNotNull(serverUrl, "serverUrl");
    }
 
    private String buildPutUrl(String urlStr, String dcPath, String dsName) {

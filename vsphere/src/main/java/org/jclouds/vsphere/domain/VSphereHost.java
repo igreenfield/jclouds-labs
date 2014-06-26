@@ -26,13 +26,15 @@ import com.vmware.vim25.mo.HostSystem;
 import java.io.Closeable;
 import java.io.IOException;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class VSphereHost implements Closeable {
    private VSphereServiceInstance serviceInstance;
    private HostSystem host;
 
    public VSphereHost(HostSystem host, VSphereServiceInstance serviceInstance) {
-      this.host = host;
-      this.serviceInstance = serviceInstance;
+      this.host = checkNotNull(host, "host");
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
    }
 
    public HostSystem getHost() {

@@ -54,7 +54,7 @@ public class VirtualMachineToSshClient implements Function<VirtualMachine, SshCl
 
    @Inject
    public VirtualMachineToSshClient(SshClient.Factory sshClientFactory) {
-      this.sshClientFactory = sshClientFactory;
+      this.sshClientFactory = checkNotNull(sshClientFactory, "sshClientFactory");
    }
 
    @Override

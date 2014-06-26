@@ -67,7 +67,6 @@ import com.vmware.vim25.mo.ResourcePool;
 import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.compute.ComputeServiceAdapter;
-import org.jclouds.compute.callables.RunScriptOnNode;
 import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.HardwareBuilder;
 import org.jclouds.compute.domain.Image;
@@ -129,20 +128,18 @@ public class VSphereComputeServiceAdapter implements
    private final VirtualMachineToImage virtualMachineToImage;
    protected final NetworkConfigurationForNetworkAndOptions networkConfigurationForNetworkAndOptions;
    private final Supplier<VSphereHost> vSphereHost;
-   private RunScriptOnNode.Factory runScriptOnNodeFactory;
 
    @Inject
    public VSphereComputeServiceAdapter(Supplier<VSphereServiceInstance> serviceInstance, Supplier<Map<String, CustomFieldDef>> customFields, Supplier<VSphereHost> vSphereHost,
                                        VirtualMachineToImage virtualMachineToImage,
                                        NetworkConfigurationForNetworkAndOptions networkConfigurationForNetworkAndOptions,
-                                       @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword, RunScriptOnNode.Factory runScriptOnNodeFactory) {
+                                       @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
       this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
       this.customFields = checkNotNull(customFields, "customFields");
       this.virtualMachineToImage = virtualMachineToImage;
-      this.vmInitPassword = vmInitPassword;
-      this.networkConfigurationForNetworkAndOptions = networkConfigurationForNetworkAndOptions;
-      this.vSphereHost = vSphereHost;
-      this.runScriptOnNodeFactory = runScriptOnNodeFactory;
+      this.vmInitPassword = checkNotNull(vmInitPassword, "vmInitPassword");
+      this.networkConfigurationForNetworkAndOptions = checkNotNull(networkConfigurationForNetworkAndOptions, "networkConfigurationForNetworkAndOptions");
+      this.vSphereHost = checkNotNull(vSphereHost, "vSphereHost");
    }
 
    @Override

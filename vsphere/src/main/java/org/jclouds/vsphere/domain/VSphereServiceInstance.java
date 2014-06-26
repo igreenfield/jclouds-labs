@@ -24,6 +24,8 @@ import com.vmware.vim25.mo.ServiceInstance;
 import java.io.Closeable;
 import java.io.IOException;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Wrapper class on the ServiceInstance from vSphere SDK
  * <p/>
@@ -34,7 +36,7 @@ public class VSphereServiceInstance implements Closeable {
    private ServiceInstance instance;
 
    public VSphereServiceInstance(ServiceInstance instance) {
-      this.instance = instance;
+      this.instance = checkNotNull(instance, "ServiceInstance");
    }
 
    public ServiceInstance getInstance() {

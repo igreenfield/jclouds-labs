@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Sets.newHashSet;
@@ -81,9 +82,9 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
     public VirtualMachineToNodeMetadata(Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus,
                                         Supplier<Map<String, CustomFieldDef>> customFields,
                                         Supplier<VSphereServiceInstance> serviceInstanceSupplier) {
-        this.toPortableNodeStatus = toPortableNodeStatus;
-        this.customFields = customFields;
-        this.serviceInstanceSupplier = serviceInstanceSupplier;
+        this.toPortableNodeStatus = checkNotNull(toPortableNodeStatus, "PortableNodeStatus");
+        this.customFields = checkNotNull(customFields, "customFields");
+        this.serviceInstanceSupplier = checkNotNull(serviceInstanceSupplier, "serviceInstanceSupplier");
     }
 
     @Override

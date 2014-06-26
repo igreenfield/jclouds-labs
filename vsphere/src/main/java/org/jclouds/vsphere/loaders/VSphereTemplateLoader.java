@@ -33,6 +33,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Singleton
 public class VSphereTemplateLoader extends CacheLoader<String, Optional<VirtualMachine>> {
    @Resource
@@ -42,7 +44,7 @@ public class VSphereTemplateLoader extends CacheLoader<String, Optional<VirtualM
 
    @Inject
    VSphereTemplateLoader(Supplier<VSphereServiceInstance> serviceInstance) {
-      this.serviceInstance = serviceInstance;
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
    }
 
    @Override
