@@ -20,7 +20,6 @@ package org.jclouds.vsphere.compute.config;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -54,7 +53,6 @@ import com.vmware.vim25.VirtualLsiLogicController;
 import com.vmware.vim25.VirtualMachineCloneSpec;
 import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
-import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.VirtualPCNet32;
 import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.Folder;
@@ -81,7 +79,6 @@ import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
-import org.jclouds.util.Predicates2;
 import org.jclouds.vsphere.VSphereApiMetadata;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.compute.strategy.NetworkConfigurationForNetworkAndOptions;
@@ -105,7 +102,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -119,20 +115,7 @@ import static org.jclouds.vsphere.config.VSphereConstants.CLONING;
 public class VSphereComputeServiceAdapter implements
         ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location> {
 
-   public static final Predicate<VirtualMachine> WAIT_FOR_NIC = Predicates2.retry(new Predicate<VirtualMachine>() {
-      @Override
-      public boolean apply(VirtualMachine vm) {
-         return vm.getGuest().getNet() != null;
-      }
-   }, 5 * 1000 * 10, 5 * 1000, TimeUnit.MILLISECONDS);
-   public static final Predicate<VirtualMachine> WAIT_FOR_VMTOOLS = Predicates2.retry(new Predicate<VirtualMachine>() {
-      @Override
-      public boolean apply(VirtualMachine vm) {
-         return (vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld));
-      }
-   }, 10 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS);
-
-   private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -329,13 +312,7 @@ public class VSphereComputeServiceAdapter implements
                   if (vOptions.postConfiguration())
                      postConfiguration(cloned, name, tag, networkConfigs);
                   else {
-                     while (!(cloned.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) ||
-                             cloned.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld))) {
-                        try {
-                           Thread.sleep(60 * 1000);
-                        } catch (Exception e) {
-                        }
-                     }
+                      VSpherePredicate.WAIT_FOR_VMTOOLS_TWO_HOURS.apply(cloned);
                   }
                }
             } catch (Exception e) {
@@ -729,7 +706,7 @@ public class VSphereComputeServiceAdapter implements
       GuestNicInfo[] nics = virtualMachine.getGuest().getNet();
       int retries = 0;
       if (nics == null) {
-         WAIT_FOR_NIC.apply(virtualMachine);
+         VSpherePredicate.WAIT_FOR_NIC.apply(virtualMachine);
          nics = virtualMachine.getGuest().getNet();
       }
       return nics;
@@ -777,7 +754,7 @@ public class VSphereComputeServiceAdapter implements
 
    private void postConfiguration(VirtualMachine vm, String name, String group, Set<NetworkConfig> networkConfigs) {
       if (!vm.getConfig().isTemplate())
-         WAIT_FOR_VMTOOLS.apply(vm);
+         VSpherePredicate.WAIT_FOR_VMTOOLS.apply(vm);
 
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
       GuestAuthManager gam = gom.getAuthManager(vm);

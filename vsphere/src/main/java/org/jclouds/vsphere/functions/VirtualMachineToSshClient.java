@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jclouds.vsphere.functions;
 
 import com.google.common.base.Function;
