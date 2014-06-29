@@ -31,7 +31,6 @@ import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.ServiceInstance;
 import com.vmware.vim25.mo.VirtualMachine;
-import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.config.ComputeServiceAdapterContextModule;
 import org.jclouds.compute.domain.Hardware;
@@ -73,7 +72,7 @@ public class VSphereComputeServiceContextModule extends
    protected void configure() {
       super.configure();
 
-      bind(ComputeService.class).to(VSphereComputeService.class);
+      //bind(ComputeService.class).to(VSphereComputeService.class);
       bind(TemplateOptions.class).to(VSphereTemplateOptions.class);
       bind(LocationsSupplier.class).to(VSphereLocationSupplier.class);
       bind(FileManagerApi.class).to(VSphereFileManager.class);

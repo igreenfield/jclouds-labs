@@ -51,7 +51,6 @@ public class CreateAndConnectVSphereClient implements Supplier<VSphereServiceIns
    protected Logger logger = Logger.NULL;
 
    private final Supplier<URI> providerSupplier;
-   //private transient ServiceInstance client;
    private transient Supplier<Credentials> credentials;
 
    @Inject
