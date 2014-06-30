@@ -167,7 +167,11 @@ public class VSphereComputeServiceAdapter implements
 
             VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
             virtualMachineConfigSpec.setMemoryMB((long) template.getHardware().getRam());
-            virtualMachineConfigSpec.setNumCPUs(template.getHardware().getProcessors().size());
+             if (template.getHardware().getProcessors().size() > 0)
+                virtualMachineConfigSpec.setNumCPUs((int)template.getHardware().getProcessors().get(0).getCores());
+             else
+                virtualMachineConfigSpec.setNumCPUs(1);
+
 
 
             Set<NetworkConfig> networkConfigs = Sets.newHashSet();
