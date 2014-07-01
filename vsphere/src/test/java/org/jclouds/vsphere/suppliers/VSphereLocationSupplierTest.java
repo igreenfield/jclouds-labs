@@ -19,7 +19,6 @@
 
 package org.jclouds.vsphere.suppliers;
 
-import com.google.common.base.Supplier;
 import com.vmware.vim25.AboutInfo;
 import com.vmware.vim25.ManagedObjectReference;
 import com.vmware.vim25.VimPortType;
@@ -29,7 +28,6 @@ import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;
 import com.vmware.vim25.ws.WSClient;
 import junit.framework.Assert;
-import org.easymock.IAnswer;
 import org.jclouds.domain.Location;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.functions.CreateAndConnectVSphereClient;
@@ -69,7 +67,7 @@ public class VSphereLocationSupplierTest extends PowerMockTestCase {
       expect(serverConnection.getServiceInstance()).andReturn(serviceInstance).anyTimes();
       expect(serverConnection.getVimService()).andReturn(new VimPortType(wsClient)).anyTimes();
       AboutInfo aboutInfo = new AboutInfo();
-      aboutInfo.setApiVersion("5");
+      aboutInfo.setApiVersion("5.1");
       expect(serviceInstance.getPropertyCollector()).andReturn(new PropertyCollector(serverConnection, managedObjectReference));
       expect(serviceInstance.getAboutInfo()).andReturn(aboutInfo);
       vSphereServiceInstance.close();
