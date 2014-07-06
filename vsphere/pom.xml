@@ -34,6 +34,7 @@
   <packaging>bundle</packaging>
 
   <properties>
+      <powermock.version>1.5.5</powermock.version>
     <test.vsphere.endpoint>https://localhost/sdk</test.vsphere.endpoint>
     <test.vsphere.api-version>5.1</test.vsphere.api-version>
     <test.vsphere.build-version/>
@@ -92,13 +93,48 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-easymock-release-full</artifactId>
-      <version>1.5.5</version>
-	  <classifier>full</classifier>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-core</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-api-easymock</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-reflect</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-api-support</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-module-testng</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-module-testng-common</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.powermock</groupId>
+          <artifactId>powermock-classloading-base</artifactId>
+          <version>${powermock.version}</version>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
   <profiles>
