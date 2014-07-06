@@ -102,5 +102,6 @@ public interface ExtensionManagerApi {
      * provider unable to handle the request.
      * @deprecated
      */
-     void printAllExtensions();
+    @Deprecated
+    void printAllExtensions();
 }

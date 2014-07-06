@@ -46,6 +46,7 @@ public interface PerformanceManagerApi {
      * @throws com.vmware.vim25.RuntimeFault
      * @deprecated use UpdatePerfInterval instead
      */
+    @Deprecated
     void createPerfInterval(PerfInterval intervalId) throws RuntimeFault, RemoteException;
 
     List<PerfMetricId> queryAvailablePerfMetric(ManagedEntity entity, Calendar beginTime, Calendar endTime, Integer intervalId) throws RuntimeFault, RemoteException;

@@ -27,13 +27,13 @@ import com.vmware.vim25.mo.PropertyCollector;
 import com.vmware.vim25.mo.ServerConnection;
 import com.vmware.vim25.mo.ServiceInstance;
 import com.vmware.vim25.ws.WSClient;
-import junit.framework.Assert;
 import org.jclouds.domain.Location;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.functions.CreateAndConnectVSphereClient;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -77,7 +77,7 @@ public class VSphereLocationSupplierTest extends PowerMockTestCase {
       VSphereLocationSupplier vSphereLocationSupplier = new VSphereLocationSupplier(supplier);
       Set<? extends Location> location = vSphereLocationSupplier.get();
 
-      Assert.assertEquals(1 , location.size());
+      Assert.assertEquals(1, location.size());
       for (Location l : location) {
          Assert.assertEquals("default" , l.getId());
       }

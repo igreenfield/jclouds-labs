@@ -41,6 +41,7 @@ public interface LicenseManagerApi {
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     LicenseDiagnostics getDiagnostics();
 
     LicenseManagerEvaluationInfo getEvaluation();
@@ -52,21 +53,25 @@ public interface LicenseManagerApi {
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     LicenseFeatureInfo[] getFeatureInfo();
 
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     String getLicensedEdition();
 
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     LicenseSource getSource();
 
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     boolean getSourceAvailable();
 
     /**
@@ -86,6 +91,7 @@ public interface LicenseManagerApi {
     /**
      * @deprecated in SDK4.0
      */
+    @Deprecated
     void disableFeature(HostSystem host, String featureKey) throws LicenseServerUnavailable, InvalidState, RuntimeFault, RemoteException;
 
     void enableFeature(HostSystem host, String featureKey) throws LicenseServerUnavailable, InvalidState, RuntimeFault, RemoteException;
