@@ -96,6 +96,7 @@
       <groupId>org.powermock</groupId>
       <artifactId>powermock-easymock-release-full</artifactId>
       <version>1.5.5</version>
+	  <classifier>full</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>
