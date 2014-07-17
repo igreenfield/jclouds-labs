@@ -53,7 +53,7 @@ import com.vmware.vim25.VirtualLsiLogicController;
 import com.vmware.vim25.VirtualMachineCloneSpec;
 import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
-import com.vmware.vim25.VirtualPCNet32;
+import com.vmware.vim25.VirtualVmxnet3;
 import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.GuestAuthManager;
@@ -101,6 +101,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -313,7 +314,7 @@ public class VSphereComputeServiceAdapter implements
                   if (vOptions.postConfiguration())
                      postConfiguration(cloned, name, tag, networkConfigs);
                   else {
-                      VSpherePredicate.WAIT_FOR_VMTOOLS_TWO_HOURS.apply(cloned);
+                      VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 60 * 60 * 2, TimeUnit.MILLISECONDS).apply(cloned);
                   }
                }
             } catch (Exception e) {
@@ -661,7 +662,7 @@ public class VSphereComputeServiceAdapter implements
          VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
          nicSpec.setOperation(VirtualDeviceConfigSpecOperation.add);
 
-         VirtualEthernetCard nic = new VirtualPCNet32();
+         VirtualEthernetCard nic = new VirtualVmxnet3();
          VirtualEthernetCardNetworkBackingInfo nicBacking = new VirtualEthernetCardNetworkBackingInfo();
          nicBacking.setDeviceName(net.getNetworkName());
          Description info = new Description();
@@ -705,9 +706,8 @@ public class VSphereComputeServiceAdapter implements
 
    private GuestNicInfo[] getGuestNicInfo(VirtualMachine virtualMachine) {
       GuestNicInfo[] nics = virtualMachine.getGuest().getNet();
-      int retries = 0;
       if (nics == null) {
-         VSpherePredicate.WAIT_FOR_NIC.apply(virtualMachine);
+         VSpherePredicate.WAIT_FOR_NIC(1000 * 60 * 5, TimeUnit.MILLISECONDS).apply(virtualMachine);
          nics = virtualMachine.getGuest().getNet();
       }
       return nics;
@@ -755,7 +755,7 @@ public class VSphereComputeServiceAdapter implements
 
    private void postConfiguration(VirtualMachine vm, String name, String group, Set<NetworkConfig> networkConfigs) {
       if (!vm.getConfig().isTemplate())
-         VSpherePredicate.WAIT_FOR_VMTOOLS.apply(vm);
+         VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 10, TimeUnit.MILLISECONDS).apply(vm);
 
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
       GuestAuthManager gam = gom.getAuthManager(vm);

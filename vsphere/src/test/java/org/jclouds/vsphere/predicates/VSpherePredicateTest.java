@@ -23,6 +23,8 @@ import com.vmware.vim25.mo.VirtualMachine;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Date: 26/06/2014 9:18 AM
  * Package: org.jclouds.vsphere.predicates
@@ -45,14 +47,14 @@ public class VSpherePredicateTest {
 
     public void wait_for_nicTest() {
         long start = System.currentTimeMillis();
-        Assert.assertTrue(!VSpherePredicate.WAIT_FOR_NIC.apply(new VirtualMachine(null, null)));
-        Assert.assertTrue(System.currentTimeMillis() - start > 5 * 1000 * 10);
+        Assert.assertTrue(!VSpherePredicate.WAIT_FOR_NIC(1000 * 10, TimeUnit.MILLISECONDS).apply(new VirtualMachine(null, null)));
+        Assert.assertTrue(System.currentTimeMillis() - start > 1000 * 9);
     }
 
     public void wait_for_vmtoolsTest() {
         long start = System.currentTimeMillis();
-        Assert.assertTrue(!VSpherePredicate.WAIT_FOR_VMTOOLS.apply(new VirtualMachine(null, null)));
-        Assert.assertTrue(System.currentTimeMillis() - start > 10 * 1000 * 10);
+        Assert.assertTrue(!VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 2, TimeUnit.MILLISECONDS).apply(new VirtualMachine(null, null)));
+        Assert.assertTrue(System.currentTimeMillis() - start > 1000);
     }
 
 

@@ -144,7 +144,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                                 return false;
                             }
                         }
-                    }, 10 * 1000 * 20, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
+                    }, 60 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
                 }
 
 
@@ -155,8 +155,11 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                     if (null != nics) {
                         for (GuestNicInfo nic : nics) {
                             String[] addresses = nic.getIpAddress();
+
                             if (null != addresses) {
                                 for (String address : addresses) {
+                                    if (logger.isTraceEnabled())
+                                        logger.trace("<< find IP addresses " + address +" for " + virtualMachineName);
                                     if (isInet4Address.apply(address)) {
                                         ipv4Addresses.add(address);
                                     } else if (isInet6Address.apply(address)) {

@@ -80,38 +80,13 @@ public class VSpherePredicate {
         }
 
     };
-    public static final Predicate<VirtualMachine> WAIT_FOR_NIC = Predicates2.retry(new Predicate<VirtualMachine>() {
-        @Override
-        public boolean apply(VirtualMachine vm) {
-            try {
-                return vm.getGuest().getNet() != null;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-    }, 5 * 1000 * 10, 5 * 1000, TimeUnit.MILLISECONDS);
+    public static final Predicate<VirtualMachine> WAIT_FOR_NIC(Integer timeout, TimeUnit timeUnit) {
+        return new WaitForNic(timeout,timeUnit);
+    }
 
-    public static final Predicate<VirtualMachine> WAIT_FOR_VMTOOLS = Predicates2.retry(new Predicate<VirtualMachine>() {
-        @Override
-        public boolean apply(VirtualMachine vm) {
-            try {
-                return (vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld));
-            } catch (Exception e) {
-                return false;
-            }
-        }
-    }, 10 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS);
-
-    public static final Predicate<VirtualMachine> WAIT_FOR_VMTOOLS_TWO_HOURS = Predicates2.retry(new Predicate<VirtualMachine>() {
-        @Override
-        public boolean apply(VirtualMachine vm) {
-            try {
-                return (vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld));
-            } catch (Exception e) {
-                return false;
-            }
-        }
-    }, 1000 * 60 * 60 * 2, 60 * 1000, TimeUnit.MILLISECONDS);
+    public static final Predicate<VirtualMachine> WAIT_FOR_VMTOOLS(Integer timeout, TimeUnit timeUnit) {
+        return new WaitForVmTools(timeout,timeUnit);
+    }
 
     public static Predicate<ResourcePool> isResourcePoolOf(String hostname) {
         return new IsResourcePoolOf(hostname);
@@ -127,6 +102,67 @@ public class VSpherePredicate {
 
     public static Predicate<VirtualMachine> isNodeIdInList(Iterable<String> ids) {
         return new IsNodeIdInList(ids);
+    }
+}
+
+class WaitForVmTools implements Predicate<VirtualMachine> {
+    private final Integer timeout;
+    private final TimeUnit timeUnit;
+
+    private final Predicate<VirtualMachine> delegate;
+
+    WaitForVmTools(Integer timeout, TimeUnit timeUnit) {
+        this.timeout = timeout;
+        this.timeUnit = timeUnit;
+        delegate = Predicates2.retry(new Predicate<VirtualMachine>() {
+            @Override
+            public boolean apply(VirtualMachine vm) {
+                try {
+                    return (vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOk) || vm.getGuest().getToolsStatus().equals(VirtualMachineToolsStatus.toolsOld));
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }, timeout, 1000, timeUnit);
+
+    }
+    @Override
+    public boolean apply(VirtualMachine vm) {
+        try {
+            return delegate.apply(vm);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
+class WaitForNic implements Predicate<VirtualMachine> {
+    private final Integer timeout;
+    private final TimeUnit timeUnit;
+
+    private final Predicate<VirtualMachine> delegate;
+
+    WaitForNic(Integer timeout, TimeUnit timeUnit) {
+        this.timeout = timeout;
+        this.timeUnit = timeUnit;
+        delegate = Predicates2.retry(new Predicate<VirtualMachine>() {
+            @Override
+            public boolean apply(VirtualMachine vm) {
+                try {
+                    return vm.getGuest().getNet() != null;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }, timeout, 1000, timeUnit);
+
+    }
+    @Override
+    public boolean apply(VirtualMachine vm) {
+        try {
+            return delegate.apply(vm);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 
