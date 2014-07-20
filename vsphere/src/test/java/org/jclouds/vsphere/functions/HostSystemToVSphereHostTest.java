@@ -20,19 +20,29 @@
 package org.jclouds.vsphere.functions;
 
 import com.vmware.vim25.mo.HostSystem;
+import com.vmware.vim25.mo.ServerConnection;
+import com.vmware.vim25.mo.ServiceInstance;
 import org.powermock.api.easymock.PowerMock;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * Created by igreenfi on 20/07/2014.
- */
-public class HostSystemToVSphereHostTest {
+import static org.easymock.EasyMock.expect;
+import static org.powermock.api.easymock.PowerMock.replay;
+
+@PrepareForTest({ServerConnection.class})
+public class HostSystemToVSphereHostTest extends PowerMockTestCase {
    @Test
    public void applyTest() {
       HostSystemToVSphereHost hostSystemToVSphereHost = new HostSystemToVSphereHost();
       Assert.assertNull(hostSystemToVSphereHost.apply(null));
       HostSystem vm = PowerMock.createMock(HostSystem.class);
+      ServiceInstance si = PowerMock.createMock(ServiceInstance.class);
+      ServerConnection sc = PowerMock.createMock(ServerConnection.class);
+      expect(vm.getServerConnection()).andReturn(sc).anyTimes();
+      expect(sc.getServiceInstance()).andReturn(si).anyTimes();
+      replay(vm, sc, ServerConnection.class);
       Assert.assertNotNull(hostSystemToVSphereHost.apply(vm));
 
 
