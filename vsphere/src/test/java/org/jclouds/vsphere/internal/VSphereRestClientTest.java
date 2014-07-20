@@ -28,17 +28,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class VSphereRestClientTest {
-    public static final String PREFIX = "stream2file";
-    public static final String SUFFIX = ".tmp";
+   public static final String PREFIX = "stream2file";
+   public static final String SUFFIX = ".tmp";
 
-    @Test
-    public void sendFileTest() throws IOException {
-        final File tempFile = File.createTempFile(PREFIX, SUFFIX);
-        tempFile.deleteOnExit();
-        FileOutputStream out = new FileOutputStream(tempFile);
-        IOUtils.copy(VSphereRestClientTest.class.getResourceAsStream("/jclouds.properties"), out);
-        VSphereRestClient client = new VSphereRestClient("http://localhost");
-        int i = client.putFile("cookies", "files", "dcPath", "dsName", tempFile);
-        Assert.assertEquals(201, i, "should be 201");
-    }
+   @Test(expectedExceptions = {java.net.ConnectException.class})
+   public void sendFileTest() throws IOException {
+      final File tempFile = File.createTempFile(PREFIX, SUFFIX);
+      tempFile.deleteOnExit();
+      FileOutputStream out = new FileOutputStream(tempFile);
+      IOUtils.copy(VSphereRestClientTest.class.getResourceAsStream("/jclouds.properties"), out);
+      VSphereRestClient client = new VSphereRestClient("http://localhost:1234");
+      int i = client.putFile("cookies", "files", "dcPath", "dsName", tempFile);
+      Assert.assertEquals(201, i, "should be 201");
+   }
 }
