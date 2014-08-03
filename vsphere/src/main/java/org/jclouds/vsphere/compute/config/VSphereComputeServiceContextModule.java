@@ -28,6 +28,7 @@ import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.VirtualMachinePowerState;
+import com.vmware.vim25.mo.DistributedVirtualPortgroup;
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.ServiceInstance;
 import com.vmware.vim25.mo.VirtualMachine;
@@ -49,6 +50,7 @@ import org.jclouds.vsphere.functions.CreateAndConnectVSphereClient;
 import org.jclouds.vsphere.functions.CreateOrGetTagsId;
 import org.jclouds.vsphere.functions.HostSystemToVSphereHost;
 import org.jclouds.vsphere.functions.NetworkConfigSupplier;
+import org.jclouds.vsphere.functions.VLanNameToDistributedVirtualPortgroup;
 import org.jclouds.vsphere.functions.VirtualMachineToImage;
 import org.jclouds.vsphere.functions.VirtualMachineToNodeMetadata;
 import org.jclouds.vsphere.functions.VirtualMachineToSshClient;
@@ -79,6 +81,9 @@ public class VSphereComputeServiceContextModule extends
 
       bind(new TypeLiteral<ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location>>() {
       }).to(VSphereComputeServiceAdapter.class);
+
+      bind(new TypeLiteral<Function<String, DistributedVirtualPortgroup>>() {
+      }).to(Class.class.cast(VLanNameToDistributedVirtualPortgroup.class));
 
       bind(new TypeLiteral<Function<Location, Location>>() {
       }).to(Class.class.cast(IdentityFunction.class));

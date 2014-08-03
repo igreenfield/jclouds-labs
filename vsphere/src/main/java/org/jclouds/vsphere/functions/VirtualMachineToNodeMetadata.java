@@ -151,26 +151,29 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                 if (VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsNotInstalled).apply(freshVm))
                     logger.trace("<< No VMware tools installed ( " + virtualMachineName + " )");
                 else if (nodeState == Status.RUNNING && not(VSpherePredicate.isTemplatePredicate).apply(freshVm)) {
-                    GuestNicInfo[] nics = freshVm.getGuest().getNet();
-                    if (null != nics) {
-                        for (GuestNicInfo nic : nics) {
+                   while (ipv4Addresses.size() < 1) {
+                      ipv4Addresses.clear();
+                      ipv6Addresses.clear();
+                      GuestNicInfo[] nics = freshVm.getGuest().getNet();
+                      if (null != nics) {
+                         for (GuestNicInfo nic : nics) {
                             String[] addresses = nic.getIpAddress();
-
                             if (null != addresses) {
-                                for (String address : addresses) {
-                                    if (logger.isTraceEnabled())
-                                        logger.trace("<< find IP addresses " + address +" for " + virtualMachineName);
-                                    if (isInet4Address.apply(address)) {
-                                        ipv4Addresses.add(address);
-                                    } else if (isInet6Address.apply(address)) {
-                                        ipv6Addresses.add(address);
-                                    }
-                                }
+                               for (String address : addresses) {
+                                  if (logger.isTraceEnabled())
+                                     logger.trace("<< find IP addresses " + address + " for " + virtualMachineName);
+                                  if (isInet4Address.apply(address)) {
+                                     ipv4Addresses.add(address);
+                                  } else if (isInet6Address.apply(address)) {
+                                     ipv6Addresses.add(address);
+                                  }
+                               }
                             }
-                        }
-                    }
-                    nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));
-                    nodeMetadataBuilder.privateAddresses(filter(ipv4Addresses, isPrivateAddress));
+                         }
+                      }
+                   }
+                   nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));
+                   nodeMetadataBuilder.privateAddresses(filter(ipv4Addresses, isPrivateAddress));
                 }
 
                 CustomFieldValue[] customFieldValues = freshVm.getCustomValue();

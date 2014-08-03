@@ -34,7 +34,6 @@ import static org.jclouds.reflect.Reflection2.typeToken;
 /**
  * Implementation of {@link BaseHttpApiMetadata} for vSphere 5.1 API
  * <p/>
- * based on Andrea Turli work.
  */
 public class VSphereApiMetadata extends BaseHttpApiMetadata<VSphereApi> {
 

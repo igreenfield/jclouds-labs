@@ -43,7 +43,6 @@ import static com.google.common.base.Strings.emptyToNull;
  * Set<NodeMetadata> set = client.createNodesInGroup(tag, 2, templateBuilder.build());
  * </code>
  * <p/>
- * based on Andrea Turli work.
  */
 public class VSphereTemplateOptions extends TemplateOptions implements Cloneable {
    @Override
@@ -72,8 +71,21 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
             eTo.datacenterName(datacenterName());
          if (waitOnPort() != null)
             eTo.waitOnPort(waitOnPort());
+         if (vmFolder() != null)
+            eTo.vmFolder(vmFolder());
          eTo.postConfiguration(postConfiguration());
+         eTo.distributedVirtualSwitch(distributedVirtualSwitch());
       }
+   }
+
+   public VSphereTemplateOptions vmFolder(String vmFolder) {
+      this.folder = vmFolder;
+      return this;
+   }
+
+   public VSphereTemplateOptions distributedVirtualSwitch(boolean distributedVirtualSwitch) {
+      this.distributedVirtualSwitch = distributedVirtualSwitch;
+      return this;
    }
 
    private String description = null;
@@ -83,7 +95,9 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
    private String isoFileName = null;
    private String flpFileName = null;
    private boolean postConfiguration = true;
+   private boolean distributedVirtualSwitch = false;
    private Integer waitOnPort = null;
+   private String folder = null;
 
    public Integer waitOnPort() {
       return waitOnPort;
@@ -159,6 +173,14 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
    public VSphereTemplateOptions datacenterName(String datacenterName) {
       this.datacenterName = datacenterName;
       return this;
+   }
+
+   public boolean distributedVirtualSwitch() {
+      return this.distributedVirtualSwitch;
+   }
+
+   public String vmFolder() {
+      return folder;
    }
 
 
@@ -239,6 +261,13 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
       public static VSphereTemplateOptions networks(Iterable<String> networks) {
          VSphereTemplateOptions options = new VSphereTemplateOptions();
          return VSphereTemplateOptions.class.cast(options.networks(networks));
+      }
+
+      public static VSphereTemplateOptions distributedVirtualSwitch(boolean distributedVirtualSwitch) {
+         return new VSphereTemplateOptions().distributedVirtualSwitch(distributedVirtualSwitch);
+      }
+      public static VSphereTemplateOptions vmFolder(String vmFolder) {
+         return new VSphereTemplateOptions().vmFolder(vmFolder);
       }
 
    }

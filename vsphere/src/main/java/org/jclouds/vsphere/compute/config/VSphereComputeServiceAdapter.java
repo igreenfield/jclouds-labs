@@ -30,6 +30,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.Description;
+import com.vmware.vim25.DistributedVirtualSwitchPortConnection;
 import com.vmware.vim25.FileTransferInformation;
 import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.GuestProcessInfo;
@@ -39,6 +40,7 @@ import com.vmware.vim25.TaskInProgress;
 import com.vmware.vim25.VirtualCdrom;
 import com.vmware.vim25.VirtualCdromIsoBackingInfo;
 import com.vmware.vim25.VirtualDevice;
+import com.vmware.vim25.VirtualDeviceBackingInfo;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
 import com.vmware.vim25.VirtualDeviceConfigSpecFileOperation;
 import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
@@ -46,6 +48,7 @@ import com.vmware.vim25.VirtualDeviceConnectInfo;
 import com.vmware.vim25.VirtualDisk;
 import com.vmware.vim25.VirtualDiskFlatVer2BackingInfo;
 import com.vmware.vim25.VirtualEthernetCard;
+import com.vmware.vim25.VirtualEthernetCardDistributedVirtualPortBackingInfo;
 import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
 import com.vmware.vim25.VirtualFloppy;
 import com.vmware.vim25.VirtualFloppyImageBackingInfo;
@@ -53,8 +56,11 @@ import com.vmware.vim25.VirtualLsiLogicController;
 import com.vmware.vim25.VirtualMachineCloneSpec;
 import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
+import com.vmware.vim25.VirtualPCNet32;
 import com.vmware.vim25.VirtualVmxnet3;
 import com.vmware.vim25.mo.Datastore;
+import com.vmware.vim25.mo.DistributedVirtualPortgroup;
+import com.vmware.vim25.mo.DistributedVirtualSwitch;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.GuestAuthManager;
 import com.vmware.vim25.mo.GuestFileManager;
@@ -86,6 +92,7 @@ import org.jclouds.vsphere.domain.InstanceType;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.domain.network.NetworkConfig;
+import org.jclouds.vsphere.functions.FolderNameToFolderManagedEntity;
 import org.jclouds.vsphere.functions.MasterToVirtualMachineCloneSpec;
 import org.jclouds.vsphere.functions.VirtualMachineToImage;
 import org.jclouds.vsphere.predicates.VSpherePredicate;
@@ -115,7 +122,8 @@ import static org.jclouds.vsphere.config.VSphereConstants.CLONING;
 public class VSphereComputeServiceAdapter implements
         ComputeServiceAdapter<VirtualMachine, Hardware, Image, Location> {
 
-    private final ReentrantLock lock = new ReentrantLock();
+   private final ReentrantLock lock = new ReentrantLock();
+   private final Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction;
 
    @Resource
    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
@@ -133,6 +141,7 @@ public class VSphereComputeServiceAdapter implements
    @Inject
    public VSphereComputeServiceAdapter(Supplier<VSphereServiceInstance> serviceInstance, Supplier<Map<String, CustomFieldDef>> customFields, Supplier<VSphereHost> vSphereHost,
                                        VirtualMachineToImage virtualMachineToImage,
+                                       Function<String, DistributedVirtualPortgroup> distributedVirtualSwitchFunction,
                                        NetworkConfigurationForNetworkAndOptions networkConfigurationForNetworkAndOptions,
                                        @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
       this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
@@ -141,6 +150,7 @@ public class VSphereComputeServiceAdapter implements
       this.vmInitPassword = checkNotNull(vmInitPassword, "vmInitPassword");
       this.networkConfigurationForNetworkAndOptions = checkNotNull(networkConfigurationForNetworkAndOptions, "networkConfigurationForNetworkAndOptions");
       this.vSphereHost = checkNotNull(vSphereHost, "vSphereHost");
+      this.distributedVirtualPortgroupFunction = distributedVirtualSwitchFunction;
    }
 
    @Override
@@ -168,11 +178,10 @@ public class VSphereComputeServiceAdapter implements
 
             VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
             virtualMachineConfigSpec.setMemoryMB((long) template.getHardware().getRam());
-             if (template.getHardware().getProcessors().size() > 0)
-                virtualMachineConfigSpec.setNumCPUs((int)template.getHardware().getProcessors().get(0).getCores());
-             else
-                virtualMachineConfigSpec.setNumCPUs(1);
-
+            if (template.getHardware().getProcessors().size() > 0)
+               virtualMachineConfigSpec.setNumCPUs((int) template.getHardware().getProcessors().get(0).getCores());
+            else
+               virtualMachineConfigSpec.setNumCPUs(1);
 
 
             Set<NetworkConfig> networkConfigs = Sets.newHashSet();
@@ -264,6 +273,7 @@ public class VSphereComputeServiceAdapter implements
 
                      diskFileBacking.setFileName(fileName);
                      diskFileBacking.setDiskMode("persistent");
+                     diskFileBacking.setThinProvisioned(true);
 
                      disk.setControllerKey(ckey);
                      disk.setUnitNumber(unitNumber);
@@ -280,7 +290,7 @@ public class VSphereComputeServiceAdapter implements
 
                }
             }
-            updates.addAll(createNicSpec(networkConfigs));
+            updates.addAll(createNicSpec(networkConfigs, vOptions.postConfiguration(), vOptions.distributedVirtualSwitch()));
             virtualMachineConfigSpec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
 
 //                VirtualMachineBootOptions bootOptions = new VirtualMachineBootOptions();
@@ -300,7 +310,7 @@ public class VSphereComputeServiceAdapter implements
 
             VirtualMachine cloned = null;
             try {
-               cloned = cloneMaster(master, tag, name, cloneSpec);
+               cloned = cloneMaster(master, tag, name, cloneSpec , vOptions.vmFolder());
                Set<String> tagsFromOption = vOptions.getTags();
                if (tagsFromOption.size() > 0) {
                   StringBuilder tags = new StringBuilder();
@@ -314,7 +324,7 @@ public class VSphereComputeServiceAdapter implements
                   if (vOptions.postConfiguration())
                      postConfiguration(cloned, name, tag, networkConfigs);
                   else {
-                      VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 60 * 60 * 2, TimeUnit.MILLISECONDS).apply(cloned);
+                     VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 60 * 60 * 2, TimeUnit.MILLISECONDS).apply(cloned);
                   }
                }
             } catch (Exception e) {
@@ -594,14 +604,16 @@ public class VSphereComputeServiceAdapter implements
       return null;
    }
 
-   private VirtualMachine cloneMaster(VirtualMachine master, String tag, String name, VirtualMachineCloneSpec cloneSpec) {
+   private VirtualMachine cloneMaster(VirtualMachine master, String tag, String name, VirtualMachineCloneSpec cloneSpec, String folderName) {
+
       VirtualMachine cloned = null;
       try {
-
-         Task task = master.cloneVM_Task((Folder) master.getParent(), name, cloneSpec);
+         FolderNameToFolderManagedEntity toFolderManagedEntity = new FolderNameToFolderManagedEntity(serviceInstance, master);
+         Folder folder = toFolderManagedEntity.apply(folderName);
+         Task task = master.cloneVM_Task(folder, name, cloneSpec);
          String result = task.waitForTask();
          if (result.equals(Task.SUCCESS)) {
-            cloned = (VirtualMachine) new InventoryNavigator((Folder) master.getParent()).searchManagedEntity("VirtualMachine", name);
+            cloned = (VirtualMachine) new InventoryNavigator(folder).searchManagedEntity("VirtualMachine", name);
          } else {
             String errorMessage = task.getTaskInfo().getError().getLocalizedMessage();
             logger.error(errorMessage);
@@ -655,22 +667,48 @@ public class VSphereComputeServiceAdapter implements
       return checkNotNull(image, "image");
    }
 
-   private List<VirtualDeviceConfigSpec> createNicSpec(Set<NetworkConfig> networks) {
+   private List<VirtualDeviceConfigSpec> createNicSpec(Set<NetworkConfig> networks, boolean hasVMWareTools, boolean distributedSwitch) {
       List<VirtualDeviceConfigSpec> nics = Lists.newArrayList();
       int i = 0;
       for (NetworkConfig net : networks) {
          VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
          nicSpec.setOperation(VirtualDeviceConfigSpecOperation.add);
 
-         VirtualEthernetCard nic = new VirtualVmxnet3();
-         VirtualEthernetCardNetworkBackingInfo nicBacking = new VirtualEthernetCardNetworkBackingInfo();
-         nicBacking.setDeviceName(net.getNetworkName());
-         Description info = new Description();
-         info.setLabel(net.getNicName());
-         info.setLabel("" + i);
-         info.setSummary(net.getNetworkName());
-         nic.setDeviceInfo(info);
-         nic.setAddressType(net.getAddressType());
+         VirtualEthernetCard nic = null;
+         if (hasVMWareTools)
+            nic = new VirtualVmxnet3();
+         else
+            nic = new VirtualPCNet32();
+
+         VirtualDeviceBackingInfo nicBacking = null;
+         if (distributedSwitch){
+
+            DistributedVirtualPortgroup virtualPortgroup = distributedVirtualPortgroupFunction.apply(net.getNetworkName());
+
+            nicBacking = new  VirtualEthernetCardDistributedVirtualPortBackingInfo();
+            DistributedVirtualSwitchPortConnection port = new DistributedVirtualSwitchPortConnection();
+            port.setPortgroupKey(virtualPortgroup.getKey());
+            DistributedVirtualSwitch distributedVirtualSwitch =  new DistributedVirtualSwitch( this.serviceInstance.get().getInstance().getServerConnection() ,virtualPortgroup.getConfig().getDistributedVirtualSwitch());
+            port.setSwitchUuid(distributedVirtualSwitch.getUuid());
+            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)nicBacking).setPort(port);
+         } else {
+            nicBacking = new VirtualEthernetCardNetworkBackingInfo();
+            ((VirtualEthernetCardNetworkBackingInfo)nicBacking).setDeviceName(net.getNetworkName());
+            Description info = new Description();
+            info.setLabel(net.getNicName());
+            info.setLabel("" + i);
+            info.setSummary(net.getNetworkName());
+            nic.setDeviceInfo(info);
+            nic.setAddressType(net.getAddressType());
+         }
+         nic.wakeOnLanEnabled = true;
+
+         VirtualDeviceConnectInfo deviceConnectInfo = new VirtualDeviceConnectInfo();
+         deviceConnectInfo.connected = true;
+         deviceConnectInfo.startConnected = true;
+         deviceConnectInfo.allowGuestControl = true;
+
+         nic.connectable = deviceConnectInfo;
          nic.setBacking(nicBacking);
          nic.setKey(i);
          nicSpec.setDevice(nic);
