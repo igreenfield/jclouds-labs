@@ -43,8 +43,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
-@PrepareForTest( { ServerConnection.class,
-                   WSClient.class } )
+@PrepareForTest({ServerConnection.class,
+        WSClient.class})
 public class VSphereLocationSupplierTest extends PowerMockTestCase {
    @Test
    public void vSphereLocationSupplierTest() throws IOException {
@@ -79,7 +79,7 @@ public class VSphereLocationSupplierTest extends PowerMockTestCase {
 
       Assert.assertEquals(1, location.size());
       for (Location l : location) {
-         Assert.assertEquals("default" , l.getId());
+         Assert.assertEquals("default", l.getId());
       }
 
 

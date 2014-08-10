@@ -22,6 +22,13 @@ package org.jclouds.vsphere.functions;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.vmware.vim25.CustomizationAdapterMapping;
+import com.vmware.vim25.CustomizationDhcpIpGenerator;
+import com.vmware.vim25.CustomizationFixedName;
+import com.vmware.vim25.CustomizationGlobalIPSettings;
+import com.vmware.vim25.CustomizationIPSettings;
+import com.vmware.vim25.CustomizationLinuxPrep;
+import com.vmware.vim25.CustomizationSpec;
 import com.vmware.vim25.FileFault;
 import com.vmware.vim25.InvalidName;
 import com.vmware.vim25.InvalidProperty;
@@ -70,20 +77,24 @@ public class MasterToVirtualMachineCloneSpec implements Function<VirtualMachine,
    private final ResourcePool resourcePool;
    private final Datastore datastore;
    private String cloningStrategy;
+   private String linuxName;
+   private final boolean postConfiguration;
 
    @Inject
-   public MasterToVirtualMachineCloneSpec(ResourcePool resourcePool, Datastore datastore, String cloningStrategy) {
+   public MasterToVirtualMachineCloneSpec(ResourcePool resourcePool, Datastore datastore, String cloningStrategy, String linuxName, boolean postConfiguration) {
       this.resourcePool = resourcePool;
       this.datastore = datastore;
       this.cloningStrategy = cloningStrategy;
+      this.linuxName = linuxName;
+      this.postConfiguration = postConfiguration;
    }
 
    @Override
    public VirtualMachineCloneSpec apply(VirtualMachine master) {
-      return prepareCloneSpec(master, resourcePool, datastore);
+      return prepareCloneSpec(master, resourcePool, datastore, linuxName, postConfiguration);
    }
 
-   private VirtualMachineCloneSpec prepareCloneSpec(VirtualMachine master, ResourcePool resourcePool, Datastore datastore) {
+   private VirtualMachineCloneSpec prepareCloneSpec(VirtualMachine master, ResourcePool resourcePool, Datastore datastore, String linuxName, boolean postConfiguration) {
       VirtualMachineRelocateSpec relocateSpec = null;
       VirtualMachineCloneSpec cloneSpec = null;
 
@@ -95,7 +106,7 @@ public class MasterToVirtualMachineCloneSpec implements Function<VirtualMachine,
       }
 
       try {
-         cloneSpec = checkNotNull(configureVirtualMachineCloneSpec(relocateSpec), "cloneSpec");
+         cloneSpec = checkNotNull(configureVirtualMachineCloneSpec(relocateSpec, linuxName, postConfiguration), "cloneSpec");
       } catch (Exception e) {
          logger.error("Can't configure clone spec from vm " + master.getName(), e);
          throw propagate(e);
@@ -154,13 +165,33 @@ public class MasterToVirtualMachineCloneSpec implements Function<VirtualMachine,
       return rSpec;
    }
 
-   private VirtualMachineCloneSpec configureVirtualMachineCloneSpec(VirtualMachineRelocateSpec rSpec) throws Exception {
+   private VirtualMachineCloneSpec configureVirtualMachineCloneSpec(VirtualMachineRelocateSpec rSpec, String linuxName, boolean postConfiguration) throws Exception {
 
       VirtualMachineCloneSpec cloneSpec = new VirtualMachineCloneSpec();
       cloneSpec.setPowerOn(true);
       cloneSpec.setTemplate(false);
       //cloneSpec.setSnapshot(currentSnapshot.getMOR());
       cloneSpec.setLocation(rSpec);
+      if (postConfiguration) {
+         CustomizationSpec customizationSpec = new CustomizationSpec();
+         CustomizationLinuxPrep linuxPrep = new CustomizationLinuxPrep();
+         CustomizationFixedName fixedName = new CustomizationFixedName();
+         fixedName.setName(linuxName);
+         linuxPrep.setHostName(fixedName);
+         linuxPrep.setDomain("");
+         linuxPrep.setHwClockUTC(true);
+         //linuxPrep.setTimeZone("Etc/UTC");
+         customizationSpec.setIdentity(linuxPrep);
+         customizationSpec.setGlobalIPSettings(new CustomizationGlobalIPSettings());
+         CustomizationAdapterMapping[] nicSettingMap = new CustomizationAdapterMapping[1];
+         nicSettingMap[0] = new CustomizationAdapterMapping();
+         nicSettingMap[0].adapter = new CustomizationIPSettings();
+         nicSettingMap[0].adapter.setIp(new CustomizationDhcpIpGenerator());
+         customizationSpec.setNicSettingMap(nicSettingMap);
+         cloneSpec.setCustomization(customizationSpec);
+      }
+
+
       return cloneSpec;
    }
 

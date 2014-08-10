@@ -29,7 +29,9 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
+import org.testng.annotations.Test;
 
+import java.util.Properties;
 import java.util.Set;
 
 import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
@@ -42,7 +44,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-//@Test(groups = "unit", testName = "ContextBuilderTest")
+@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
    public void testVSphereContext() throws RunNodesException {
       ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
@@ -69,6 +71,42 @@ public class ContextBuilderTest {
 
       // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
       Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());
+
+      System.out.print("");
+   }
+
+   public void testPhenixVsphere() throws Exception {
+      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
+      Properties p = new Properties();
+      p.put("jclouds.vsphere.vm.password","Nat0d12");
+      ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
+              .credentials("root", "vmware")
+              .endpoint("https://10.63.120.120/sdk")
+              .modules(modules)
+              .overrides(p)
+              .buildView(ComputeServiceContext.class);
+
+      TemplateBuilder b = context.getComputeService().templateBuilder();
+      TemplateOptions o = context.getComputeService().templateOptions();
+      ((VSphereTemplateOptions) o).postConfiguration(true);
+      ((VSphereTemplateOptions) o).distributedVirtualSwitch(true);
+      ((VSphereTemplateOptions) o).vmFolder("CI");
+
+      o.tags(ImmutableSet.of("from UnitTest"))
+              .nodeNames(ImmutableSet.of("first-vm12"))
+              .networks("VLAN_283");
+//        b.imageId("Cisco Centos 6.5").smallest();
+//        b.imageId("Cisco Centos 6.5.0").smallest().options(o);
+      //b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
+      b.imageId("RHEL_6.5").locationId("default").minRam(6000).options(o);
+
+      // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
+      Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());
+
+//      ServiceInstance serviceInstance = new ServiceInstance(new URL("https://10.63.120.120/sdk"), "root", "vmware", true);
+//
+//      ManagedEntity entity = new InventoryNavigator(serviceInstance.getRootFolder()).searchManagedEntity("DistributedVirtualPortgroup", "VLAN_283");
+//      ManagedEntity entity1 = new InventoryNavigator(serviceInstance.getRootFolder()).searchManagedEntity("Folder", "GADWALL");
 
       System.out.print("");
    }

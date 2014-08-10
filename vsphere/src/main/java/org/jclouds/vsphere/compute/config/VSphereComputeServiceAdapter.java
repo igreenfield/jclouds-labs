@@ -170,10 +170,13 @@ public class VSphereComputeServiceAdapter implements
             VirtualMachine master = getVMwareTemplate(template.getImage().getId(), rootFolder);
             ResourcePool resourcePool = checkNotNull(tryFindResourcePool(rootFolder, sphereHost.getHost().getName()), "resourcePool");
 
-            VirtualMachineCloneSpec cloneSpec = new MasterToVirtualMachineCloneSpec(resourcePool, sphereHost.getDatastore(),
-                    VSphereApiMetadata.defaultProperties().getProperty(CLONING)).apply(master);
-
             VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+
+            VirtualMachineCloneSpec cloneSpec = new MasterToVirtualMachineCloneSpec(resourcePool, sphereHost.getDatastore(),
+                    VSphereApiMetadata.defaultProperties().getProperty(CLONING), name, vOptions.postConfiguration()).apply(master);
+
+
+
             Set<String> networks = vOptions.getNetworks();
 
             VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
@@ -701,14 +704,14 @@ public class VSphereComputeServiceAdapter implements
             nic.setDeviceInfo(info);
             nic.setAddressType(net.getAddressType());
          }
-         nic.wakeOnLanEnabled = true;
+         nic.setWakeOnLanEnabled(true);
 
          VirtualDeviceConnectInfo deviceConnectInfo = new VirtualDeviceConnectInfo();
-         deviceConnectInfo.connected = true;
-         deviceConnectInfo.startConnected = true;
-         deviceConnectInfo.allowGuestControl = true;
+         deviceConnectInfo.setConnected(true);
+         deviceConnectInfo.setStartConnected(true);
+         deviceConnectInfo.setAllowGuestControl(true);
 
-         nic.connectable = deviceConnectInfo;
+         nic.setConnectable(deviceConnectInfo);
          nic.setBacking(nicBacking);
          nic.setKey(i);
          nicSpec.setDevice(nic);
@@ -793,7 +796,7 @@ public class VSphereComputeServiceAdapter implements
 
    private void postConfiguration(VirtualMachine vm, String name, String group, Set<NetworkConfig> networkConfigs) {
       if (!vm.getConfig().isTemplate())
-         VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 10, TimeUnit.MILLISECONDS).apply(vm);
+         VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 60, TimeUnit.MILLISECONDS).apply(vm);
 
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
       GuestAuthManager gam = gom.getAuthManager(vm);
@@ -803,21 +806,22 @@ public class VSphereComputeServiceAdapter implements
       GuestProgramSpec gps = new GuestProgramSpec();
       gps.programPath = "/bin/sh";
 
-      StringBuilder ethScript = new StringBuilder("rm -f /etc/sysconfig/network-scripts/ifcfg-eth*;");
+     // StringBuilder ethScript = new StringBuilder("rm -f /etc/sysconfig/network-scripts/ifcfg-eth*;");
+      StringBuilder ethScript = new StringBuilder();
 
       int index = 0;
       for (NetworkConfig config : networkConfigs) {
-         ethScript.append("echo 'DEVICE=eth" + index);
-         ethScript.append("\nTYPE=Ethernet");
-         ethScript.append("\nONBOOT=yes");
-         ethScript.append("\nNM_CONTROLLED=yes");
-         ethScript.append("\nBOOTPROTO=" + getBOOTPROTO(config.getAddressType()) + "' > /etc/sysconfig/network-scripts/ifcfg-eth" + index + ";");
+//         ethScript.append("echo 'DEVICE=eth" + index);
+//         ethScript.append("\nTYPE=Ethernet");
+//         ethScript.append("\nONBOOT=yes");
+//         ethScript.append("\nNM_CONTROLLED=yes");
+//         ethScript.append("\nBOOTPROTO=" + getBOOTPROTO(config.getAddressType()) + "' > /etc/sysconfig/network-scripts/ifcfg-eth" + index + ";");
          index++;
       }
 
-      ethScript.append("sed -i \"/HOSTNAME/d\" /etc/sysconfig/network;");
-      ethScript.append("echo \"HOSTNAME=" + name + "\" >> /etc/sysconfig/network;");
-      ethScript.append("hostname " + name + ";");
+      //ethScript.append("sed -i \"/HOSTNAME/d\" /etc/sysconfig/network;");
+      //ethScript.append("echo \"HOSTNAME=" + name + "\" >> /etc/sysconfig/network;");
+      //ethScript.append("hostname " + name + ";");
 
 
       ethScript.append("\necho 'fdisk /dev/sdb <<EOF");
@@ -855,6 +859,11 @@ public class VSphereComputeServiceAdapter implements
       List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin",
               "SHELL=/bin/bash");
 
+      waitForsStateToChange();
+      if (!vm.getConfig().isTemplate())
+         VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 60, TimeUnit.MILLISECONDS).apply(vm);
+      waitForsStateToChange();
+
       gps.setEnvVariables(env.toArray(new String[env.size()]));
       GuestProcessManager gpm = gom.getProcessManager(vm);
       try {
@@ -878,5 +887,13 @@ public class VSphereComputeServiceAdapter implements
          Throwables.propagate(e);
       }
 
+   }
+
+   private void waitForsStateToChange() {
+      try {
+         Thread.sleep(10 * 1000);
+      } catch (InterruptedException e) {
+
+      }
    }
 }

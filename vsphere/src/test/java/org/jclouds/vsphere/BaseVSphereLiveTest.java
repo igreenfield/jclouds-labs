@@ -23,10 +23,7 @@ import com.vmware.vim25.mo.ServiceInstance;
 
 import java.net.URL;
 
-/**
- * Date: 18/05/2014 3:42 PM
- * Package: org.jclouds.vsphere
- */
+
 public class BaseVSphereLiveTest {
    //@Test
    public void testTestUploadFile() throws Exception {
