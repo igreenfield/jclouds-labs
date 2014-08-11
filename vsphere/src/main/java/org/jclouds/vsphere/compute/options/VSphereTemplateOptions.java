@@ -19,7 +19,6 @@
 package org.jclouds.vsphere.compute.options;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 import org.jclouds.compute.options.TemplateOptions;
 
 import java.util.Map;
@@ -137,8 +136,7 @@ public class VSphereTemplateOptions extends TemplateOptions implements Cloneable
               addressType, datacenterName);
    }
 
-   @Override
-   public ToStringHelper string() {
+   public com.google.common.base.MoreObjects.ToStringHelper string() {
       return super.string().add("description", description).add("customizationScript", customizationScript)
               .add("addressType", addressType).add("datacenterName", datacenterName);
    }
