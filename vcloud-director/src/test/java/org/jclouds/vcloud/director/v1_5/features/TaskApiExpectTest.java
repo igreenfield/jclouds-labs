@@ -23,8 +23,6 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.URI;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.jclouds.http.HttpRequest;
 import org.jclouds.http.HttpResponse;
 import org.jclouds.vcloud.director.v1_5.domain.Reference;
@@ -34,10 +32,10 @@ import org.jclouds.vcloud.director.v1_5.internal.VCloudDirectorAdminApiExpectTes
 import org.jclouds.vcloud.director.v1_5.user.VCloudDirectorApi;
 import org.testng.annotations.Test;
 
+import com.google.common.net.HttpHeaders;
+
 /**
  * Test the {@link TaskApi} by observing its side effects.
- * 
- * @author grkvlt@apache.org
  */
 @Test(groups = { "unit", "user" }, singleThreaded = true, testName = "TaskApiExpectTest")
 public class TaskApiExpectTest extends VCloudDirectorAdminApiExpectTest {

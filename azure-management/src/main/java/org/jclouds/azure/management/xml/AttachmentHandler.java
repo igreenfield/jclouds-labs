@@ -23,8 +23,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/jj157176" >api</a>
- * 
- * @author Adrian Cole
  */
 public class AttachmentHandler extends ParseSax.HandlerForGeneratedRequestWithResult<Attachment> {
 
@@ -55,7 +53,7 @@ public class AttachmentHandler extends ParseSax.HandlerForGeneratedRequestWithRe
       } else if (qName.equals("RoleName")) {
          builder.role(SaxUtils.currentOrNull(currentText));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

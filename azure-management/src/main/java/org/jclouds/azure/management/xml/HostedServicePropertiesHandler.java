@@ -27,7 +27,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * @author Adrian Cole
  */
 public class HostedServicePropertiesHandler extends
          ParseSax.HandlerForGeneratedRequestWithResult<HostedServiceProperties> {
@@ -61,7 +60,7 @@ public class HostedServicePropertiesHandler extends
       } else if (equalsOrSuffix(qName, "Label")) {
          builder.label(new String(base64().decode(currentOrNull(currentText)), UTF_8));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

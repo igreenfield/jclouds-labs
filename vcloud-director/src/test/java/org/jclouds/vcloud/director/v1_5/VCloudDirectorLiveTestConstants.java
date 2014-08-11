@@ -16,10 +16,7 @@
  */
 package org.jclouds.vcloud.director.v1_5;
 
-/**
- * @author grkvlt@apache.org
- */
-public class VCloudDirectorLiveTestConstants {
+public final class VCloudDirectorLiveTestConstants {
 
    /* regular expressions for pattern matching */
    
@@ -103,4 +100,7 @@ public class VCloudDirectorLiveTestConstants {
 
    public static final String ENTITY_CONDITION = "ERR-303: The %s entity must %s (%s)";
 
+   private VCloudDirectorLiveTestConstants() {
+      throw new AssertionError("intentionally unimplemented");
+   }
 }

@@ -22,6 +22,7 @@ import java.beans.ConstructorProperties;
 
 import javax.inject.Named;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 
@@ -30,7 +31,6 @@ import com.google.common.collect.ComparisonChain;
  * smart machine or a virtual machine. These resources include (but are not limited to) RAM, CPUs,
  * CPU Caps, Lightweight Threads, Disk Space, Swap size, and Logical Networks.
  * 
- * @author Gerald Pereira
  * @see <a href= "http://apidocs.joyent.com/sdcapidoc/cloudapi/index.html#packages" >docs</a>
  */
 public class Package implements Comparable<Package> {
@@ -174,7 +174,7 @@ public class Package implements Comparable<Package> {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").omitNullValues()
+      return MoreObjects.toStringHelper("").omitNullValues()
                     .add("name", name)
                     .add("memorySizeMb", memorySizeMb)
                     .add("diskSizeGb", diskSizeGb)

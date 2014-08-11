@@ -18,9 +18,6 @@ package org.jclouds.cloudsigma2.domain;
 
 import java.util.Iterator;
 
-/**
- * @author Vladimir Shevchenko
- */
 public class DrivesListRequestFieldsGroup {
    private final Iterable<String> fields;
 
@@ -36,7 +33,7 @@ public class DrivesListRequestFieldsGroup {
    public String toString() {
       String returnString = "";
 
-      Iterator iterator = fields.iterator();
+      Iterator<String> iterator = fields.iterator();
 
       while (iterator.hasNext()) {
          returnString += iterator.next();

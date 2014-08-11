@@ -41,6 +41,7 @@ import org.jclouds.vcloud.director.v1_5.domain.section.OperatingSystemSection;
 import org.jclouds.vcloud.director.v1_5.domain.section.RuntimeInfoSection;
 import org.jclouds.vcloud.director.v1_5.domain.section.VirtualHardwareSection;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -48,7 +49,6 @@ import com.google.common.collect.Sets;
 /**
  * Represents a list of {@code ovf:Section} to configure for instantiating a VApp.
  *
- * @author grkvlt@apache.org
  * @see <a href="http://www.vmware.com/support/vcd/doc/rest-api-doc-1.5-html/types/InstantiationParamsType.html">
  *    vCloud REST API - InstantiationParamsType</a>
  * @since 0.9
@@ -168,7 +168,7 @@ public class InstantiationParams {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("sections", sections).toString();
+      return MoreObjects.toStringHelper("").add("sections", sections).toString();
    }
    
 }

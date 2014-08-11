@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -29,8 +30,6 @@ import com.google.common.base.Objects;
  * A public IP address can be allocated to a virtual system, then needs to be
  * enabled/attached before it can be mapped to a virtual server by configuring
  * the NAT settings of virtual system's firewall.
- * 
- * @author Dies Koper
  */
 public class PublicIP {
 
@@ -86,7 +85,7 @@ public class PublicIP {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues()
+      return MoreObjects.toStringHelper(this).omitNullValues()
             .add("address", address).add("version", version).toString();
    }
 }

@@ -25,7 +25,7 @@ import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.Statement;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Optional;
 
 /**
@@ -43,8 +43,6 @@ import com.google.common.base.Optional;
  * templateBuilder.options(inboundPorts(22, 80, 8080, 443));
  * Set<? extends NodeMetadata> set = api.createNodesInGroup(tag, 2, templateBuilder.build());
  * <code>
- * 
- * @author Adrian Cole
  */
 public class JoyentCloudTemplateOptions extends TemplateOptions implements Cloneable {
    

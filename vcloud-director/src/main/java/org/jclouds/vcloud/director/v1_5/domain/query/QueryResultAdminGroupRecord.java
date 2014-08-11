@@ -23,12 +23,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents the results from a AdminGroup vCloud query as a record.
- * 
- * @author Aled Sage
  */
 @XmlRootElement(name = "GroupRecord")
 @XmlType(name = "QueryResultAdminGroupRecordType")

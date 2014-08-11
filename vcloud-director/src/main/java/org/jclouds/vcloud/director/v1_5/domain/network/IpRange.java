@@ -21,12 +21,11 @@ import static com.google.common.base.Objects.equal;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Represents a range of IP addresses, start and end inclusive.
- *
- * @author danikov
  */
 @XmlRootElement(name = "IpRange")
 public class IpRange {
@@ -114,7 +113,7 @@ public class IpRange {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("startAddress", startAddress)
+      return MoreObjects.toStringHelper("").add("startAddress", startAddress)
             .add("endAddress", endAddress).toString();
    }
 

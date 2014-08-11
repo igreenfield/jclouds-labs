@@ -21,15 +21,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 
 /**
  * Minimal info about a LastBuild
  * 
  * GET http://host/job/project/lastBuild/api/json
- * 
- * @author Andrea Turli
  */
 public class LastBuild {
 
@@ -274,7 +273,7 @@ public class LastBuild {
    }
 
    protected ToStringHelper string() {
-      return Objects.toStringHelper("")
+      return MoreObjects.toStringHelper("")
                .add("id", id)
                .add("url", url)
                .add("description", description)

@@ -22,12 +22,9 @@ import static org.jclouds.opsource.servers.OpSourceNameSpaces.SERVER;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-/**
- * 
- * @author Kedar Dave
- */
 @XmlRootElement(namespace = SERVER, name = "step")
 public class Step {
    public static Builder builder() {
@@ -114,7 +111,7 @@ public class Step {
 
 	@Override
    	public String toString() {
-		return Objects.toStringHelper("").add("name", name).add("number", number).add("percentComplete", percentComplete).toString();
+		return MoreObjects.toStringHelper("").add("name", name).add("number", number).add("percentComplete", percentComplete).toString();
 	}
 
 }

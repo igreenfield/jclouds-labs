@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import org.jclouds.Fallbacks.NullOnNotFoundOr404;
 import org.jclouds.digitalocean.domain.Event;
 import org.jclouds.digitalocean.http.filters.AuthenticationFilter;
+import org.jclouds.javax.annotation.Nullable;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.SelectJson;
@@ -35,9 +36,6 @@ import com.google.inject.name.Named;
 
 /**
  * Provides access to the Event API.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
  */
 @RequestFilters(AuthenticationFilter.class)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -55,5 +53,6 @@ public interface EventApi extends Closeable {
    @Path("/{id}")
    @Fallback(NullOnNotFoundOr404.class)
    @SelectJson("event")
+   @Nullable
    Event get(@PathParam("id") int id);
 }

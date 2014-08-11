@@ -29,15 +29,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * Task List
- * 
- * 
- * @author Adrian Cole
  */
 @XmlRootElement(name = "TasksList")
 public class TasksList extends Resource implements Set<Task> {

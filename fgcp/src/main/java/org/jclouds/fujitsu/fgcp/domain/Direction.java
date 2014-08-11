@@ -18,6 +18,7 @@ package org.jclouds.fujitsu.fgcp.domain;
 
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -26,8 +27,6 @@ import com.google.common.collect.Sets;
  * Grouping of firewall rules pertaining to a particular direction in network
  * traffic, e.g. from the Internet to a server in the DMZ zone, or from a server
  * in the SECURE2 zone to the SECURE1 zone, etc.
- * 
- * @author Dies Koper
  */
 public class Direction {
    private String from;
@@ -103,7 +102,7 @@ public class Direction {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("from", from)
+      return MoreObjects.toStringHelper(this).omitNullValues().add("from", from)
             .add("to", to).add("prefix", prefix).add("policies", policies)
             .add("maxPolicyNum", maxPolicyNum)
             .add("acceptable", acceptable).toString();

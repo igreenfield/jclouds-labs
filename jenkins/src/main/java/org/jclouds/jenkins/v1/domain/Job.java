@@ -21,13 +21,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 
 /**
  * Minimal info about a Job
- * 
- * @author Adrian Cole
  */
 public class Job {
 
@@ -149,7 +148,7 @@ public class Job {
    }
 
    protected ToStringHelper string() {
-      return Objects.toStringHelper("").add("name", name).add("url", url).add("color",
+      return MoreObjects.toStringHelper("").add("name", name).add("url", url).add("color",
                color);
    }
 }

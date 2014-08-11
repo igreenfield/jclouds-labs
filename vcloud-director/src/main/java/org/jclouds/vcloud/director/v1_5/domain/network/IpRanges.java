@@ -25,14 +25,13 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * A list of IpAddresses.
- *
- * @author danikov
  */
 @XmlRootElement(name = "IpRanges")
 public class IpRanges {
@@ -105,6 +104,6 @@ public class IpRanges {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("ipRanges", ipRanges).toString();
+      return MoreObjects.toStringHelper("").add("ipRanges", ipRanges).toString();
    }
 }

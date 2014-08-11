@@ -31,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +41,6 @@ import com.google.common.collect.Maps;
 /**
  * a SmartMachine or traditional Virtual Machine
  * 
- * @author Gerald Pereira
  * @see <a href= "http://apidocs.joyent.com/sdcapidoc/cloudapi/index.html#machines" />
  */
 public class Machine implements Comparable<Machine> {
@@ -387,7 +387,7 @@ public class Machine implements Comparable<Machine> {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").omitNullValues()
+      return MoreObjects.toStringHelper("").omitNullValues()
                     .add("id", id)
                     .add("name", name)
                     .add("type", type)

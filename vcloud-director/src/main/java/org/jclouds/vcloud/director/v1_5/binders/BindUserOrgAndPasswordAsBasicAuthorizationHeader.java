@@ -23,17 +23,16 @@ import static java.lang.String.format;
 import java.util.Map;
 
 import javax.inject.Singleton;
-import javax.ws.rs.core.HttpHeaders;
 
 import org.jclouds.http.HttpRequest;
 import org.jclouds.rest.MapBinder;
+
+import com.google.common.net.HttpHeaders;
 
 /**
  * Uses Basic Authentication to sign the request.
  * 
  * @see <a href= "http://en.wikipedia.org/wiki/Basic_access_authentication" />
- * @author Adrian Cole
- * 
  */
 @Singleton
 public class BindUserOrgAndPasswordAsBasicAuthorizationHeader implements MapBinder {

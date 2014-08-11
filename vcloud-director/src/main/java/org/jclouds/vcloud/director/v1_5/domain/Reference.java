@@ -28,8 +28,9 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.jclouds.logging.Logger;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 
 /**
  * A reference to a resource.
@@ -40,8 +41,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;xs:complexType name="ReferenceType"&gt;
  * </pre>
- * 
- * @author grkvlt@apache.org
  */
 @XmlSeeAlso({ VAppReference.class, CatalogReference.class, RoleReference.class })
 @XmlRootElement(name = "Reference")
@@ -199,7 +198,7 @@ public class Reference {
    }
 
    protected ToStringHelper string() {
-      return Objects.toStringHelper("").add("href", href).add("name", name).add("type", type);
+      return MoreObjects.toStringHelper("").add("href", href).add("name", name).add("type", type);
    }
 
 }

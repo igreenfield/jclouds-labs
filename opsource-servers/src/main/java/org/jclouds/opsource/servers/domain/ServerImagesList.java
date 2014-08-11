@@ -25,13 +25,13 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * Represents set of OS Server Images from which servers may be deployed
- * @author Kedar Dave
  */
 @XmlRootElement(namespace = SERVER, name = "ServerImages")
 public class ServerImagesList {
@@ -95,7 +95,7 @@ public class ServerImagesList {
 
 	@Override
    	public String toString() {
-		return Objects.toStringHelper("").add("serverImages", serverImages).toString();
+		return MoreObjects.toStringHelper("").add("serverImages", serverImages).toString();
 	}
 
 }

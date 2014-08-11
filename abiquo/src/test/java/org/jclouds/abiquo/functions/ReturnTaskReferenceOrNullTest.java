@@ -35,12 +35,11 @@ import org.testng.annotations.Test;
 
 import com.abiquo.model.transport.AcceptedRequestDto;
 import com.google.common.base.Function;
+import com.google.common.io.ByteSource;
 import com.google.inject.TypeLiteral;
 
 /**
  * Unit tests for the {@link ReturnTaskReferenceOrNull} function.
- * 
- * @author Ignasi Barrera
  */
 @Test(groups = "unit", testName = "ReturnTaskReferenceOrNullTest")
 public class ReturnTaskReferenceOrNullTest {
@@ -63,7 +62,7 @@ public class ReturnTaskReferenceOrNullTest {
    public void testReturnTaskIfAccepted() throws IOException {
       JAXBParser parser = new JAXBParser("false");
       AcceptedRequestDto<?> task = new AcceptedRequestDto<String>();
-      Payload payload = Payloads.newPayload(parser.toXML(task));
+      Payload payload = Payloads.newByteSourcePayload(ByteSource.wrap(parser.toXML(task).getBytes()));
 
       Function<HttpResponse, AcceptedRequestDto<String>> function = new ReturnTaskReferenceOrNull(parser,
             createTypeLiteral());

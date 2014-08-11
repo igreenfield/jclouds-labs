@@ -30,10 +30,8 @@ import com.google.common.collect.ImmutableList;
 /**
  * Convert the template options into a statement, but ignoring the public key.
  * <p>
- * The {@link DigitalOceanComputeServiceAdapter} already takes care of installing it using the {@link KeyPairApi}.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
+ * The {@link org.jclouds.digitalocean.compute.strategy.DigitalOceanComputeServiceAdapter} already takes care of
+ * installing it using the {@link org.jclouds.digitalocean.features.KeyPairApi}.
  */
 @Singleton
 public class TemplateOptionsToStatementWithoutPublicKey extends TemplateOptionsToStatement {

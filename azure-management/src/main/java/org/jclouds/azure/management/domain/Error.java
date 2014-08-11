@@ -19,14 +19,13 @@ package org.jclouds.azure.management.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * additional error information that is defined by the management service. Th
  * 
  * @see <a href="http://msdn.microsoft.com/en-us/library/ee460801" >api</a>
- * 
- * @author Adrian Cole
  */
 public class Error {
 
@@ -245,7 +244,7 @@ public class Error {
     */
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("code", rawCode).add("message", message).toString();
+      return MoreObjects.toStringHelper(this).omitNullValues().add("code", rawCode).add("message", message).toString();
    }
 
 }

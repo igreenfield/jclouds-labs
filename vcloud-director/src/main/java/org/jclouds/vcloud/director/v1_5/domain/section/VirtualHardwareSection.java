@@ -34,14 +34,12 @@ import javax.xml.bind.annotation.XmlType;
 import org.jclouds.vcloud.director.v1_5.domain.Link;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * The virtual hardware required by a virtual machine is specified in VirtualHardwareSection.
- *
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "VirtualHardwareSection", namespace = OVF_NS)
 @XmlType(name = "VirtualHardwareSection_Type")

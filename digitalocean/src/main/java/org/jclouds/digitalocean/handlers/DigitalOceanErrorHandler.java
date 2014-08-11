@@ -28,10 +28,8 @@ import org.jclouds.rest.ResourceNotFoundException;
 /**
  * Parse the errors in the response and propagate an appropriate exception.
  * 
- * @author Sergi Castro
- * @author Ignasi Barrera
  * 
- * @see ResponseStatusFromPayloadHttpCommandExecutorService
+ * @see org.jclouds.digitalocean.http.ResponseStatusFromPayloadHttpCommandExecutorService
  */
 @Singleton
 public class DigitalOceanErrorHandler implements HttpErrorHandler {

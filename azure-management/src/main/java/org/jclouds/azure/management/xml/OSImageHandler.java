@@ -28,7 +28,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/jj157191" >api</a>
- * @author Adrian Cole
  */
 public class OSImageHandler extends ParseSax.HandlerForGeneratedRequestWithResult<OSImage> {
 
@@ -79,7 +78,7 @@ public class OSImageHandler extends ParseSax.HandlerForGeneratedRequestWithResul
       } else if (equalsOrSuffix(qName, "Label")) {
          builder.label(currentOrNull(currentText));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

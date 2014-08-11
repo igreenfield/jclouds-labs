@@ -18,12 +18,11 @@ package org.jclouds.fujitsu.fgcp.domain;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Holds the statistics of a virtual server.
- * 
- * @author Dies Koper
  */
 @XmlRootElement(name = "performanceinfo")
 public class PerformanceInfo implements Comparable<PerformanceInfo> {
@@ -127,7 +126,7 @@ public class PerformanceInfo implements Comparable<PerformanceInfo> {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues()
+      return MoreObjects.toStringHelper(this).omitNullValues()
             .add("recordTime", recordTime)
             .add("cpuUtilization", cpuUtilization)
             .add("diskReadRequestCount", diskReadRequestCount)

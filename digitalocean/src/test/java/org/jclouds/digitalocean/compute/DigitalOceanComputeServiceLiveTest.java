@@ -26,10 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
 /**
- * Live tests for the {@link ComputeService} integration.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
+ * Live tests for the {@link org.jclouds.compute.ComputeService} integration.
  */
 @Test(groups = "live", singleThreaded = true, testName = "DigitalOceanComputeServiceLiveTest")
 public class DigitalOceanComputeServiceLiveTest extends BaseComputeServiceLiveTest {

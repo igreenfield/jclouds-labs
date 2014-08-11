@@ -37,8 +37,6 @@ import java.io.IOException;
  * <p/>
  * Errors are returned with an appropriate HTTP status code, an X-Elastic- Error header specifying
  * the error type, and a text description in the HTTP body.
- *
- * @author Vladimir Shevchenko
  */
 @Singleton
 public class CloudSigmaErrorHandler implements HttpErrorHandler {
@@ -96,15 +94,9 @@ public class CloudSigmaErrorHandler implements HttpErrorHandler {
       if (response.getPayload() == null)
          return null;
       try {
-         return Strings2.toString(response.getPayload());
+         return Strings2.toStringAndClose(response.getPayload().openStream());
       } catch (IOException e) {
          throw Throwables.propagate(e);
-      } finally {
-         try {
-            response.getPayload().getInput().close();
-         } catch (IOException e) {
-            throw Throwables.propagate(e);
-         }
       }
    }
 }

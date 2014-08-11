@@ -39,9 +39,6 @@ import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 /**
  * Mock tests for the {@link DropletApi} class.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
  */
 @Test(groups = "unit", testName = "DropletApiMockTest")
 public class DropletApiMockTest extends BaseDigitalOceanMockTest {
@@ -98,6 +95,58 @@ public class DropletApiMockTest extends BaseDigitalOceanMockTest {
 
          assertRequestHasCommonFields(server.takeRequest(), "/droplets/100823");
          assertNull(droplet);
+      } finally {
+         api.close();
+         server.shutdown();
+      }
+   }
+
+   public void testCreateDropletUsingSlugs() throws Exception {
+      MockWebServer server = mockWebServer();
+      server.enqueue(new MockResponse().setBody(payloadFromResource("/droplet-creation.json")));
+
+      DigitalOceanApi api = api(server.getUrl("/"));
+      DropletApi dropletApi = api.getDropletApi();
+
+      try {
+         DropletCreation droplet = dropletApi.create("test", "img-1", "size-1", "region-1");
+
+         assertRequestHasParameters(server.takeRequest(), "/droplets/new", ImmutableMultimap.of("name", "test",
+               "image_slug", "img-1", "size_slug", "size-1", "region_slug", "region-1"));
+
+         assertNotNull(droplet);
+         assertEquals(droplet.getName(), "test");
+      } finally {
+         api.close();
+         server.shutdown();
+      }
+   }
+
+   public void testCreateDropletUsingSlugsWithOptions() throws Exception {
+      MockWebServer server = mockWebServer();
+      server.enqueue(new MockResponse().setBody(payloadFromResource("/droplet-creation.json")));
+
+      DigitalOceanApi api = api(server.getUrl("/"));
+      DropletApi dropletApi = api.getDropletApi();
+
+      try {
+         CreateDropletOptions options = CreateDropletOptions.builder().addSshKeyId(5).addSshKeyId(4)
+               .privateNetworking(true).backupsEnabled(false).build();
+         DropletCreation droplet = dropletApi.create("test", "img-1", "size-1", "region-1", options);
+
+         ImmutableMultimap.Builder<String, String> params = ImmutableMultimap.builder();
+         params.put("name", "test");
+         params.put("image_slug", "img-1");
+         params.put("size_slug", "size-1");
+         params.put("region_slug", "region-1");
+         params.put("ssh_key_ids", "5,4");
+         params.put("private_networking", "true");
+         params.put("backups_enabled", "false");
+
+         assertRequestHasParameters(server.takeRequest(), "/droplets/new", params.build());
+
+         assertNotNull(droplet);
+         assertEquals(droplet.getName(), "test");
       } finally {
          api.close();
          server.shutdown();

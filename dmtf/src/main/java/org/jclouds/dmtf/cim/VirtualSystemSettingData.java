@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -54,8 +55,6 @@ import com.google.common.collect.Maps;
  * <li>snapshots of virtual systems
  * </ul>
  * 
- * @author Adrian Cole
- * @author grkvlt@apache.org
  * @see <a href="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2.22.0/CIM_VirtualSystemSettingData.xsd">CIM_VirtualSystemSettingData</a>
  */
 @XmlType(name = "CIM_VirtualSystemSettingData_Type", namespace = OVF_NS,
@@ -694,7 +693,7 @@ public class VirtualSystemSettingData {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("")
+      return MoreObjects.toStringHelper("")
             .add("elementName", elementName)
             .add("instanceID", instanceID)
             .add("caption", caption)

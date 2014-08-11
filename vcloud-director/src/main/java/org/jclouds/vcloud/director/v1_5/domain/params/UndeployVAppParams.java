@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,7 +40,6 @@ import com.google.common.collect.Maps;
 /**
  * Represents vApp/VM undeployment parameters.
  * 
- * @author grkvlt@apache.org
  * @see <a href="http://www.vmware.com/support/vcd/doc/rest-api-doc-1.5-html/types/UndeployVAppParamsType.html">
  *    vCloud REST API - UndeployVAppParamsType</a>
  * @since 0.9
@@ -167,7 +167,7 @@ public class UndeployVAppParams {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("undeployPowerAction", undeployPowerAction).toString();
+      return MoreObjects.toStringHelper("").add("undeployPowerAction", undeployPowerAction).toString();
    }
 
 }

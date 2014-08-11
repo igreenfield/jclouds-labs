@@ -22,12 +22,9 @@ import static org.jclouds.opsource.servers.OpSourceNameSpaces.SERVER;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-/**
- * 
- * 
- */
 @XmlRootElement(name = "machineSpecification", namespace = SERVER)
 public class MachineSpecification {
    public static Builder builder() {
@@ -141,7 +138,7 @@ public class MachineSpecification {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("cpuCount", cpuCount).add("memoryMb", memoryMb).add("osStorageGb", osStorageGb)
+      return MoreObjects.toStringHelper("").add("cpuCount", cpuCount).add("memoryMb", memoryMb).add("osStorageGb", osStorageGb)
       	.add("additionalLocalStorageGb", additionalLocalStorageGb).add("operatingSystem", operatingSystem).toString();
    }
 

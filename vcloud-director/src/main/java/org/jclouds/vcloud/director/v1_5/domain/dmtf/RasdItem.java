@@ -32,14 +32,12 @@ import org.jclouds.dmtf.cim.ResourceAllocationSettingData;
 import org.jclouds.vcloud.director.v1_5.domain.Link;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * A vCloud specific {@link ResourceAllocationSettingData} extension.
- * 
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "Item", namespace = VCLOUD_1_5_NS)
 public class RasdItem extends ResourceAllocationSettingData {

@@ -20,8 +20,6 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.URI;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.jclouds.http.HttpRequest;
 import org.jclouds.http.HttpResponse;
 import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
@@ -32,10 +30,10 @@ import org.jclouds.vcloud.director.v1_5.domain.query.QueryResultRoleRecord;
 import org.jclouds.vcloud.director.v1_5.internal.VCloudDirectorAdminApiExpectTest;
 import org.testng.annotations.Test;
 
+import com.google.common.net.HttpHeaders;
+
 /**
  * Test the {@link AdminQueryApi} by observing its side effects.
- * 
- * @author Aled Sage
  */
 @Test(groups = { "unit", "admin" }, singleThreaded = true, testName = "AdminQueryApiExpectTest")
 public class AdminQueryApiExpectTest extends VCloudDirectorAdminApiExpectTest {

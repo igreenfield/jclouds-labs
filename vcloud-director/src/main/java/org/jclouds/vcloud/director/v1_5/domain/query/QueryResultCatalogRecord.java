@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents the results from a Catalog vCloud query as a record.
@@ -35,8 +35,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="QueryResultCatalogRecordType" /&gt;
  * </pre>
- *
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "CatalogRecord")
 @XmlType(name = "QueryResultCatalogRecordType")

@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.jclouds.dmtf.cim.CimString;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -35,10 +36,6 @@ import com.google.common.collect.Sets;
 /**
  * The ProductSection element specifies product-information for an appliance, such as product name,
  * version, and vendor.
- * 
- * @author Adrian Cole
- * @author Adam Lowe
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "ProductSection")
 @XmlType(name = "ProductSection_Type")
@@ -288,7 +285,7 @@ public class ProductSection extends SectionType {
    }
 
    @Override
-   protected Objects.ToStringHelper string() {
+   protected MoreObjects.ToStringHelper string() {
       return super.string()
             .add("product", product)
             .add("vendor", vendor)

@@ -24,8 +24,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/ee460801" >api</a>
- * 
- * @author Adrian Cole
  */
 public class ErrorHandler extends ParseSax.HandlerForGeneratedRequestWithResult<Error> {
 
@@ -56,7 +54,7 @@ public class ErrorHandler extends ParseSax.HandlerForGeneratedRequestWithResult<
       } else if (qName.equals("Message")) {
          builder.message(SaxUtils.currentOrNull(currentText));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

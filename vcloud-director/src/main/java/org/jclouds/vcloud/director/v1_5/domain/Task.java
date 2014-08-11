@@ -34,7 +34,7 @@ import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -47,8 +47,6 @@ import com.google.common.collect.Maps;
  * </pre>
  *
  *  TODO: this object and the hierarchy is wrong.  it is literally a Task with a Task container.  please review class diagram
- *
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "Task")
 public class Task extends Entity {

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -35,9 +36,6 @@ import com.google.common.collect.Sets;
  * the OVF shall select a configuration, for example, by prompting the user. The selected
  * configuration is visible in the OVF environment, enabling guest software to adapt to the selected
  * configuration.
- *
- * @author Adrian Cole
- * @author Adam Lowe
  */
 @XmlRootElement(name = "DeploymentOptionSection")
 @XmlType(name = "DeploymentOptionSection_Type")
@@ -118,7 +116,7 @@ public class DeploymentOptionSection extends SectionType {
    }
 
    @Override
-   protected Objects.ToStringHelper string() {
+   protected MoreObjects.ToStringHelper string() {
       return super.string().add("configurations", configurations);
    }
 }

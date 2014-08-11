@@ -16,7 +16,7 @@
  */
 package org.jclouds.digitalocean.internal;
 
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 import static org.jclouds.digitalocean.http.filters.AuthenticationFilter.CREDENTIAL_PARAM;
 import static org.jclouds.digitalocean.http.filters.AuthenticationFilter.IDENTITY_PARAM;
 import static org.jclouds.http.utils.Queries.encodeQueryLine;
@@ -28,7 +28,6 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.jclouds.ContextBuilder;
@@ -40,19 +39,17 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.net.HttpHeaders;
 import com.google.inject.Module;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 /**
  * Base class for all DigitalOcean mock tests.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
  */
 public class BaseDigitalOceanMockTest {
-   private final Set<Module> modules = ImmutableSet.<Module> of(new ExecutorServiceModule(sameThreadExecutor(),
-         sameThreadExecutor()));
+   private final Set<Module> modules = ImmutableSet.<Module> of(new ExecutorServiceModule(newDirectExecutorService(),
+         newDirectExecutorService()));
 
    protected String provider;
 

@@ -30,9 +30,6 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * @author Vladimir Shevchenko
- */
 @Singleton
 public class BindCreateSubscriptionRequestList implements Binder {
 
@@ -46,7 +43,7 @@ public class BindCreateSubscriptionRequestList implements Binder {
    @Override
    public <R extends HttpRequest> R bindToRequest(R request, Object input) {
       checkArgument(input instanceof List, "this binder is only valid for List<CreateSubscriptionRequest>!");
-      List list = List.class.cast(input);
+      List<?> list = List.class.cast(input);
       for (Object o : list) {
          checkArgument(o instanceof CreateSubscriptionRequest,
                "this binder is only valid for List<CreateSubscriptionRequest>!");

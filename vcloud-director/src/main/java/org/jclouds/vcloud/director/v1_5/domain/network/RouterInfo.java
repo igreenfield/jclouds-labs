@@ -21,12 +21,11 @@ import static com.google.common.base.Objects.equal;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Specifies router information.
- *
- * @author danikov
  */
 @XmlRootElement(name = "RouterInfo")
 public class RouterInfo {
@@ -95,7 +94,7 @@ public class RouterInfo {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("externalIp", externalIp).toString();
+      return MoreObjects.toStringHelper("").add("externalIp", externalIp).toString();
    }
 
 }

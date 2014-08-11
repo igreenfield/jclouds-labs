@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents a vApp.
@@ -32,8 +32,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="VApp" /&gt;
  * </pre>
- *
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "VApp")
 @XmlType(name = "VAppType")

@@ -18,6 +18,7 @@ package org.jclouds.azure.management.options;
 
 import java.util.Map;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
@@ -25,8 +26,6 @@ import com.google.common.base.Optional;
  * Optional parameters for creating a hosted service
  * 
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441304" >docs</a>
- * 
- * @author Adrian Cole
  */
 public class CreateHostedServiceOptions implements Cloneable {
 
@@ -121,7 +120,7 @@ public class CreateHostedServiceOptions implements Cloneable {
     */
    @Override
    public String toString() {
-      return Objects.toStringHelper("").omitNullValues().add("description", description.orNull())
+      return MoreObjects.toStringHelper("").omitNullValues().add("description", description.orNull())
                .add("extendedProperties", extendedProperties.orNull()).toString();
    }
 }

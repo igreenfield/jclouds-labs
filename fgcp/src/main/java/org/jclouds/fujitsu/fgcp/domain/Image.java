@@ -21,6 +21,7 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -28,8 +29,6 @@ import com.google.common.collect.Sets;
 /**
  * Holds information on the system disk image of a virtual server, including the
  * OS and software pre-installed on it.
- * 
- * @author Dies Koper
  */
 public class Image {
    private String id;
@@ -102,7 +101,7 @@ public class Image {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("id", id)
+      return MoreObjects.toStringHelper(this).omitNullValues().add("id", id)
             .add("serverCategory", serverCategory)
             .add("serverApplication", serverApplication)
             .add("cpuBit", cpuBit).add("sysvolSize", sysvolSize)

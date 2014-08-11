@@ -23,8 +23,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * 
- * @author Adrian Cole
  */
 public class LocationHandler extends ParseSax.HandlerForGeneratedRequestWithResult<Location> {
 
@@ -55,7 +53,7 @@ public class LocationHandler extends ParseSax.HandlerForGeneratedRequestWithResu
       } else if (qName.equals("AvailableService")) {
          builder.addAvailableService(SaxUtils.currentOrNull(currentText));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

@@ -99,7 +99,7 @@ import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -113,9 +113,6 @@ import com.google.inject.Guice;
 
 /**
  * Tests behavior of {@link VCloudDirectorApi} and acts as parent for other api live tests.
- * 
- * @author Adrian Cole
- * @author grkvlt@apache.org
  */
 @Listeners(FormatApiResultsListener.class)
 @Test(groups = "live")
@@ -287,7 +284,7 @@ public abstract class BaseVCloudDirectorApiLiveTest extends BaseContextLiveTest<
 
       @Override
       public String apply(VAppTemplate input) {
-         return Objects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
+         return MoreObjects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
                   .add("owner", input.getOwner()).toString();
       }
 
@@ -327,7 +324,7 @@ public abstract class BaseVCloudDirectorApiLiveTest extends BaseContextLiveTest<
 
       @Override
       public String apply(Vm input) {
-         return Objects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId()).toString();
+         return MoreObjects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId()).toString();
       }
 
    };
@@ -365,7 +362,7 @@ public abstract class BaseVCloudDirectorApiLiveTest extends BaseContextLiveTest<
 
       @Override
       public String apply(Catalog input) {
-         return Objects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
+         return MoreObjects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
                   .add("owner", input.getOwner()).add("isPublished", input.isPublished()).toString();
       }
 
@@ -404,7 +401,7 @@ public abstract class BaseVCloudDirectorApiLiveTest extends BaseContextLiveTest<
 
       @Override
       public String apply(Network input) {
-         return Objects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
+         return MoreObjects.toStringHelper("").omitNullValues().add("name", input.getName()).add("id", input.getId())
                   .add("fenceMode", input.getConfiguration().getFenceMode())
                   .add("taskCount", input.getTasks().size() > 0 ? input.getTasks().size() : null).toString();
       }

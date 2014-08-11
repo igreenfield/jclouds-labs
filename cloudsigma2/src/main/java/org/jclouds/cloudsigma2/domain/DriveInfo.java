@@ -25,16 +25,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author Vladimir Shevchenko
- */
 public class DriveInfo extends Drive {
    public static class Builder extends Drive.Builder {
 
       protected BigInteger size;
       protected boolean allowMultimount;
       protected List<String> affinities;
-      protected List<String> jobs;
+      protected List<Job> jobs;
       protected List<DriveLicense> licenses;
       protected MediaType media = MediaType.UNRECOGNIZED;
       protected Map<String, String> meta;
@@ -72,7 +69,7 @@ public class DriveInfo extends Drive {
        * @param jobs Background jobs related to this resource
        * @return DriveInfo Builder
        */
-      public Builder jobs(List<String> jobs) {
+      public Builder jobs(List<Job> jobs) {
          this.jobs = ImmutableList.copyOf(jobs);
          return this;
       }
@@ -207,7 +204,7 @@ public class DriveInfo extends Drive {
    @Named("allow_multimount")
    protected final boolean allowMultimount;
    protected final List<String> affinities;
-   protected final List<String> jobs;
+   protected final List<Job> jobs;
    protected final List<DriveLicense> licenses;
    protected final MediaType media;
    protected final Map<String, String> meta;
@@ -222,7 +219,7 @@ public class DriveInfo extends Drive {
    })
    public DriveInfo(String uuid, String name, URI resourceUri,
                     BigInteger size, Owner owner, DriveStatus status,
-                    boolean allowMultimount, List<String> affinities, List<String> jobs, List<DriveLicense> licenses,
+                    boolean allowMultimount, List<String> affinities, List<Job> jobs, List<DriveLicense> licenses,
                     MediaType media, Map<String, String> meta, List<Server> mountedOn, List<String> tags) {
       super(uuid, name, resourceUri, owner, status);
       this.size = size;
@@ -260,7 +257,7 @@ public class DriveInfo extends Drive {
    /**
     * @return Background jobs related to this resource
     */
-   public List<String> getJobs() {
+   public List<Job> getJobs() {
       return jobs;
    }
 

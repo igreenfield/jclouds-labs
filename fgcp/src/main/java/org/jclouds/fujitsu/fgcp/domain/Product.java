@@ -18,12 +18,11 @@ package org.jclouds.fujitsu.fgcp.domain;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Represents a product for which usage information can be queried.
- * 
- * @author Dies Koper
  */
 public class Product {
    @XmlElement(name = "productName")
@@ -75,7 +74,7 @@ public class Product {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("name", name)
+      return MoreObjects.toStringHelper(this).omitNullValues().add("name", name)
             .add("unitName", unitName).add("usedPoints", usedPoints)
             .toString();
    }

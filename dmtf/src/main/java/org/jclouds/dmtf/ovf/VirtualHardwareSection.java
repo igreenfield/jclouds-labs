@@ -28,6 +28,7 @@ import org.jclouds.dmtf.cim.ResourceAllocationSettingData;
 import org.jclouds.dmtf.cim.VirtualSystemSettingData;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -38,10 +39,6 @@ import com.google.common.collect.Sets;
  * This specification supports abstract or incomplete hardware descriptions in which only the major
  * devices are described. The hypervisor is allowed to create additional virtual hardware
  * controllers and devices, as long as the required devices listed in the descriptor are realized.
- *
- * @author Adrian Cole
- * @author Adam Lowe
- * @author grkvlt@apache.org
  */
 public class VirtualHardwareSection extends SectionType {
 
@@ -193,7 +190,7 @@ public class VirtualHardwareSection extends SectionType {
    }
 
    @Override
-   protected Objects.ToStringHelper string() {
+   protected MoreObjects.ToStringHelper string() {
       return super.string()
             .add("transport", transport)
             .add("virtualSystem", virtualSystem)

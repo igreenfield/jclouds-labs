@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents the results from a VAppTemplate vCloud query as a record.
@@ -33,8 +33,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="QueryResultVAppTemplateRecordType" /&gt;
  * </pre>
- * 
- * @author Aled Sage
  */
 @XmlRootElement(name = "VAppTemplateRecord")
 @XmlType(name = "QueryResultVAppTemplateRecordType")

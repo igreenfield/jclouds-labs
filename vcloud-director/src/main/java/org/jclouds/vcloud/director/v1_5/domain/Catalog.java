@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -38,8 +38,6 @@ import com.google.common.collect.Sets;
  * <pre>
  * &lt;complexType name="CatalogType" /&gt;
  * </pre>
- *
- * @author danikov
  */
 @XmlSeeAlso({ AdminCatalog.class })
 @XmlRootElement(name = "Catalog")

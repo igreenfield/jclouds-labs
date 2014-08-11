@@ -17,7 +17,7 @@
 package org.jclouds.virtualbox;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
+import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 import static org.jclouds.virtualbox.config.VirtualBoxConstants.VIRTUALBOX_IMAGE_PREFIX;
 
 import java.io.File;
@@ -73,8 +73,6 @@ import com.google.inject.Module;
 
 /**
  * Tests behavior of {@code VirtualBoxClient}
- * 
- * @author Adrian Cole, David Alves
  */
 @Test(groups = "live", singleThreaded = true, testName = "BaseVirtualBoxClientLiveTest")
 public class BaseVirtualBoxClientLiveTest extends BaseComputeServiceContextLiveTest {
@@ -121,7 +119,7 @@ public class BaseVirtualBoxClientLiveTest extends BaseComputeServiceContextLiveT
    @Override
    protected Iterable<Module> setupModules() {
       return ImmutableSet.<Module> of(getLoggingModule(), credentialStoreModule, getSshModule(),  new ExecutorServiceModule(
-            sameThreadExecutor(), sameThreadExecutor()));
+            newDirectExecutorService(), newDirectExecutorService()));
    }
    
    @Override
@@ -133,7 +131,7 @@ public class BaseVirtualBoxClientLiveTest extends BaseComputeServiceContextLiveT
       // try and get a master from the cache, this will initialize the config/download isos and
       // prepare everything IF a master is not available, subsequent calls should be pretty fast
       Template template = view.getComputeService().templateBuilder().build();
-      checkNotNull(mastersCache.apply(template.getImage()));
+      checkNotNull(mastersCache.getUnchecked(template.getImage()));
 
       masterName = VIRTUALBOX_IMAGE_PREFIX + template.getImage().getId();
       isosDir = workingDir + File.separator + "isos";

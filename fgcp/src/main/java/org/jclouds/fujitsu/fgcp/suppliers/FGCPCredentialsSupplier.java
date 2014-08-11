@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import org.jclouds.crypto.Pems;
 import org.jclouds.domain.Credentials;
 import org.jclouds.fujitsu.fgcp.FGCPCredentials;
-import org.jclouds.io.Payloads;
 import org.jclouds.location.Provider;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -43,15 +42,14 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.io.CharStreams;
+import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import com.google.common.io.LineProcessor;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
  * Loads {@link FGCPCredentials} from a pem file containing certificate and
  * private key.
- *
- * @author Dies Koper
  */
 public class FGCPCredentialsSupplier implements Supplier<FGCPCredentials> {
    private final Supplier<Credentials> creds;
@@ -79,7 +77,7 @@ public class FGCPCredentialsSupplier implements Supplier<FGCPCredentials> {
 
             // extract private key
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            PrivateKey privateKey = keyFactory.generatePrivate(Pems.privateKeySpec(Payloads.newStringPayload(pem)));
+            PrivateKey privateKey = keyFactory.generatePrivate(Pems.privateKeySpec(ByteSource.wrap(pem.getBytes(Charsets.UTF_8))));
 
             // extract certificate(s)
             Collection<X509Certificate> certs = x509Certificates(pem);
@@ -135,7 +133,7 @@ public class FGCPCredentialsSupplier implements Supplier<FGCPCredentials> {
                return result.toString();
             }
          };
-         String filteredPem = CharStreams.readLines(CharStreams.newReaderSupplier(pem), callback);
+         String filteredPem = CharSource.wrap(pem).readLines(callback);
          CertificateFactory fact = CertificateFactory.getInstance("X.509");
          return (Collection<X509Certificate>) fact.generateCertificates(new ByteArrayInputStream(filteredPem
                .getBytes(Charsets.UTF_8)));

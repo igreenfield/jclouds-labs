@@ -30,9 +30,6 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * @author Vladimir Shevchenko
- */
 @Singleton
 public class BindServerInfoListToJsonRequest implements Binder {
    private final ServerInfoToJson createServerInfoRequestToJson;
@@ -45,7 +42,7 @@ public class BindServerInfoListToJsonRequest implements Binder {
    @Override
    public <R extends HttpRequest> R bindToRequest(R request, Object payload) {
       checkArgument(payload instanceof List, "this binder is only valid for List<ServerInfo>!");
-      List list = List.class.cast(payload);
+      List<?> list = List.class.cast(payload);
       for (Object o : list) {
          checkArgument(o instanceof ServerInfo, "this binder is only valid for List<ServerInfo>!");
       }

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,8 +29,6 @@ import com.google.common.collect.ImmutableSet;
  * A geographical region in which a service or storage account will be hosted.
  * 
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * 
- * @author Adrian Cole
  */
 public class Location {
    public static Builder builder() {
@@ -155,7 +154,7 @@ public class Location {
     */
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("name", name).add("displayName", displayName)
+      return MoreObjects.toStringHelper(this).omitNullValues().add("name", name).add("displayName", displayName)
                .add("availableServices", availableServices).toString();
    }
 

@@ -25,13 +25,13 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * Represents list of data centers for an account
- * @author Kedar Dave
  */
 @XmlRootElement(namespace = DATACENTER, name = "DatacentersWithLimits")
 public class DataCentersList {
@@ -95,7 +95,7 @@ public class DataCentersList {
 
 	@Override
    	public String toString() {
-		return Objects.toStringHelper("").add("dataCenters", dataCenters).toString();
+		return MoreObjects.toStringHelper("").add("dataCenters", dataCenters).toString();
 	}
 
 }

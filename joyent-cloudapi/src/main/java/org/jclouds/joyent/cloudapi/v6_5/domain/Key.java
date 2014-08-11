@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.beans.ConstructorProperties;
 import java.util.Date;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
 
@@ -28,7 +29,6 @@ import com.google.common.collect.ComparisonChain;
  * Keys are the means by which you operate on your SSH/signing keys. Currently
  * CloudAPI supports uploads of public keys in the OpenSSH format.
  * 
- * @author Adrian Cole
  * @see <a href="http://apidocs.joyent.com/sdcapidoc/cloudapi/index.html#ListKeys" >docs</a>
  */
 public class Key implements Comparable<Key> {
@@ -132,7 +132,7 @@ public class Key implements Comparable<Key> {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").omitNullValues()
+      return MoreObjects.toStringHelper("").omitNullValues()
                     .add("name", name)
                     .add("key", key)
                     .add("created", created).toString();

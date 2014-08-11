@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -37,8 +38,6 @@ import com.google.common.collect.Sets;
  * Returns a representation of the current session that can serve as a single entry point to the
  * system, as it provides user, admin, and extension (sysadmin) entry links depending on the
  * privileges of the current user.
- *
- * @author Adrian Cole
  */
 @XmlRootElement(name = "Session")
 public class Session {
@@ -170,7 +169,7 @@ public class Session {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper("").add("user", user).add("org", org).add("href", href).add("links", links)
+      return MoreObjects.toStringHelper("").add("user", user).add("org", org).add("href", href).add("links", links)
             .toString();
    }
 }

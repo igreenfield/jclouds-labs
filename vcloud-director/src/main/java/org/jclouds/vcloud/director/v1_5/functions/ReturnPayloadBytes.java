@@ -21,21 +21,18 @@ import java.io.IOException;
 import javax.inject.Singleton;
 
 import org.jclouds.http.HttpResponse;
+import org.jclouds.io.ByteStreams2;
 
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-import com.google.common.io.ByteStreams;
 
-/**
- * @author grkvlt@apache.org
- */
 @Singleton
 public class ReturnPayloadBytes implements Function<HttpResponse, byte[]> {
 
    @Override
    public byte[] apply(HttpResponse from) {
       try {
-         return ByteStreams.toByteArray(from.getPayload());
+         return ByteStreams2.toByteArrayAndClose(from.getPayload().openStream());
       } catch (IOException e) {
          throw Throwables.propagate(e);
       }

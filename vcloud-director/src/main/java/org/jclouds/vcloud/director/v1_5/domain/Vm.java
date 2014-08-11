@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.jclouds.dmtf.ovf.environment.EnvironmentType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents a virtual machine.
@@ -34,8 +34,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="VmType" /&gt;
  * </pre>
- *
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "Vm")
 @XmlType(name = "VmType")

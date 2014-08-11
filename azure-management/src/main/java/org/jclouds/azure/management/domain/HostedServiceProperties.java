@@ -18,8 +18,9 @@ package org.jclouds.azure.management.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Optional;
 
 /**
@@ -28,7 +29,6 @@ import com.google.common.base.Optional;
  * is not part of an affinity group.
  * 
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * @author Adrian Cole
  */
 public class HostedServiceProperties {
    public static Builder<?> builder() {
@@ -173,7 +173,7 @@ public class HostedServiceProperties {
    }
 
    protected ToStringHelper string() {
-      return Objects.toStringHelper(this).omitNullValues().add("description", description.orNull())
+      return MoreObjects.toStringHelper(this).omitNullValues().add("description", description.orNull())
                .add("location", location.orNull()).add("affinityGroup", affinityGroup.orNull()).add("label", label);
    }
 

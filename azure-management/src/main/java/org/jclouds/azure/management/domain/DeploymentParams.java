@@ -18,8 +18,9 @@ package org.jclouds.azure.management.domain;
 
 import java.util.List;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Lists;
 
 /**
@@ -27,9 +28,6 @@ import com.google.common.collect.Lists;
  * To create a new deployment/role
  * 
  * Warning : the OSType must be the one of the source image used to create the VM
- * 
- * @author Gérald Pereira
- * 
  */
 public class DeploymentParams {
 
@@ -218,7 +216,7 @@ public class DeploymentParams {
 	}
 
 	protected ToStringHelper string() {
-		return Objects.toStringHelper(this).add("name", name)
+		return MoreObjects.toStringHelper(this).add("name", name)
 				.add("sourceImageName", sourceImageName).add("size", size);
 	}
 }

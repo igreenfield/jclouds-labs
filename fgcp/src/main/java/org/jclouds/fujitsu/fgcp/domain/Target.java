@@ -16,12 +16,11 @@
  */
 package org.jclouds.fujitsu.fgcp.domain;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Describes the target server of a load balancer.
- * 
- * @author Dies Koper
  */
 public class Target {
    private String serverId;
@@ -115,7 +114,7 @@ public class Target {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues()
+      return MoreObjects.toStringHelper(this).omitNullValues()
             .add("serverId", serverId).add("serverName", serverName)
             .add("ipAddress", ipAddress).add("port1", port1)
             .add("port2", port2).add("status", status).add("now", now)

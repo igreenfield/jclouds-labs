@@ -31,7 +31,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * @author Adrian Cole
  */
 public class HostedServiceHandler extends ParseSax.HandlerForGeneratedRequestWithResult<HostedService> {
 
@@ -92,7 +91,7 @@ public class HostedServiceHandler extends ParseSax.HandlerForGeneratedRequestWit
       } else if (equalsOrSuffix(qName, "ServiceName")) {
          builder.name(currentOrNull(currentText));
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    /**

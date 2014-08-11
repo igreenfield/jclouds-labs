@@ -24,9 +24,6 @@ import org.jclouds.savvis.vpdc.domain.FirewallRule;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
-/**
- * @author Kedar Dave
- */
 public class FirewallRuleHandler extends ParseSax.HandlerWithResult<FirewallRule> {
    protected StringBuilder currentText = new StringBuilder();
    private FirewallRule.Builder builder = FirewallRule.builder();
@@ -72,7 +69,7 @@ public class FirewallRuleHandler extends ParseSax.HandlerWithResult<FirewallRule
             builder.protocol("Icmp-ping");
          }
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    @Override

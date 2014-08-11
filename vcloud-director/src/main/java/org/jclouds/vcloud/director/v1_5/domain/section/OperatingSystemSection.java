@@ -34,16 +34,12 @@ import javax.xml.bind.annotation.XmlType;
 import org.jclouds.vcloud.director.v1_5.domain.Link;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 /**
  * An OperatingSystemSection specifies the operating system installed on a virtual machine.
- *
- * @author Adrian Cole
- * @author Adam Lowe
- * @author grkvlt@apache.org
  */
 @XmlRootElement(name = "OperatingSystemSection", namespace = OVF_NS)
 @XmlType(name = "OperatingSystemSection_Type")

@@ -26,7 +26,7 @@ import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
 import org.jclouds.vcloud.director.v1_5.domain.Entity;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents an organization.
@@ -36,8 +36,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;xs:complexType name="OrgType"&gt;
  * </pre>
- *
- * @author Adrian Cole
  */
 @XmlRootElement(name = "Org")
 @XmlSeeAlso({ AdminOrg.class })

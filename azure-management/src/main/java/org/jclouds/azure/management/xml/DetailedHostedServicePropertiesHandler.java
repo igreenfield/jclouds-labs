@@ -28,7 +28,6 @@ import org.xml.sax.SAXException;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/gg441293" >api</a>
- * @author Adrian Cole
  */
 public class DetailedHostedServicePropertiesHandler extends HostedServicePropertiesHandler {
 
@@ -76,7 +75,7 @@ public class DetailedHostedServicePropertiesHandler extends HostedServicePropert
       } else {
          super.endElement(uri, name, qName);
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
 }

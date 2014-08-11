@@ -28,8 +28,6 @@ import com.google.common.cache.LoadingCache;
 
 /**
  * Predicates handy when working with Links
- * 
- * @author Adrian Cole
  */
 
 public class LinkPredicates {
@@ -48,7 +46,7 @@ public class LinkPredicates {
 
    /** @see #relEquals(String) */
    public static Predicate<Link> relEquals(final Link.Rel rel) {
-      return LINK_REL_SELECTORS.apply(checkNotNull(rel, "rel must be defined"));
+      return LINK_REL_SELECTORS.getUnchecked(checkNotNull(rel, "rel must be defined"));
    }
    
    private static final LoadingCache<Link.Rel, Predicate<Link>> LINK_REL_SELECTORS = CacheBuilder.newBuilder()
@@ -74,7 +72,7 @@ public class LinkPredicates {
     * @see ReferenceTypePredicates#nameEquals
     */
    public static Predicate<Link> nameEquals(String name) {
-      return MEDIA_NAME_SELECTORS.apply(name);
+      return MEDIA_NAME_SELECTORS.getUnchecked(name);
    }
    
    private static final LoadingCache<String, Predicate<Link>> MEDIA_NAME_SELECTORS = CacheBuilder.newBuilder()
@@ -90,7 +88,7 @@ public class LinkPredicates {
     * @see ReferenceTypePredicates#typeEquals
     */
    public static Predicate<Link> typeEquals(String type) {
-      return MEDIA_TYPE_SELECTORS.apply(type);
+      return MEDIA_TYPE_SELECTORS.getUnchecked(type);
    }
    
    private static final LoadingCache<String, Predicate<Link>> MEDIA_TYPE_SELECTORS = CacheBuilder.newBuilder()

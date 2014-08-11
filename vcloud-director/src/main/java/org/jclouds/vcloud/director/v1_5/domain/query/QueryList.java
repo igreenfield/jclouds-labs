@@ -18,7 +18,7 @@ package org.jclouds.vcloud.director.v1_5.domain.query;
 
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Container for the list of typed queries available to the
@@ -27,8 +27,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="QueryList" /&gt;
  * </pre>
- *
- * @author grkvlt@apache.org
  */
 @XmlType(name = "QueryList")
 public class QueryList extends ContainerType {

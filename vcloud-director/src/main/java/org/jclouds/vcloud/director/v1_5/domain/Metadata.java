@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.jclouds.vcloud.director.v1_5.VCloudDirectorMediaType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -41,8 +41,6 @@ import com.google.common.collect.Sets;
  * <pre>
  * &lt;xs:complexType name="Metadata"&gt;
  * </pre>
- * 
- * @author danikov
  */
 @XmlRootElement(name = "Metadata")
 public class Metadata extends Resource implements Map<String, String> {

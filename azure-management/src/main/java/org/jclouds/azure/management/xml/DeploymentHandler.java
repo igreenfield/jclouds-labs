@@ -37,7 +37,6 @@ import com.google.common.collect.Lists;
 
 /**
  * @see <a href="http://msdn.microsoft.com/en-us/library/ee460804" >api</a>
- * @author Gérald Pereira
  */
 public class DeploymentHandler extends
 		ParseSax.HandlerForGeneratedRequestWithResult<Deployment> {
@@ -112,7 +111,7 @@ public class DeploymentHandler extends
 			builder.publicIpAddress(currentOrNull(currentText));
 		}
 
-		currentText = new StringBuilder();
+		currentText.setLength(0);
 		elements.remove(elements.size()-1);
 	}
 

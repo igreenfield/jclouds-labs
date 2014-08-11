@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 /**
  * Represents a question which vSphere issued for a VM in a stuck state(WAITING_FOR_INPUT). It has a question element, a question ID
@@ -33,8 +33,6 @@ import com.google.common.base.Objects.ToStringHelper;
  * <pre>
  * &lt;complexType name="VmPendingQuestion" /&gt;
  * </pre>
- *
- * @author grkvlt@apache.org
  */
 @XmlType(name = "VmPendingQuestion")
 public class VmPendingQuestion extends Resource {

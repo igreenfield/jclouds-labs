@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -37,8 +37,6 @@ import com.google.common.collect.Iterables;
  * hp.getSlot();      // returns 1
  * hp.toString();     // returns "myMachine:1"
  * </pre>
- *
- * @author Andrea Turli
  */
 public final class MachineNameOrIdAndNicSlot {
 
@@ -121,7 +119,7 @@ public final class MachineNameOrIdAndNicSlot {
 
   @Override
   public String toString() {
-     return Objects.toStringHelper(this)
+     return MoreObjects.toStringHelper(this)
      .add("machineNameOrId", machineNameOrId)
      .add("nicSlot", slot)
      .toString();

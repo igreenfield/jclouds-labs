@@ -18,12 +18,11 @@ package org.jclouds.fujitsu.fgcp.domain;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Represents the memory of a virtual server.
- * 
- * @author Dies Koper
  */
 public class Memory implements Comparable<Memory> {
    @XmlElement(name = "memorySize")
@@ -52,7 +51,7 @@ public class Memory implements Comparable<Memory> {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues().add("size", size)
+      return MoreObjects.toStringHelper(this).omitNullValues().add("size", size)
             .toString();
    }
 

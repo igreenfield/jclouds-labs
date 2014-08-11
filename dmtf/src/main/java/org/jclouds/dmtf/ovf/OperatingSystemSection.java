@@ -22,13 +22,11 @@ import static org.jclouds.dmtf.DMTFConstants.OVF_NS;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * An OperatingSystemSection specifies the operating system installed on a virtual machine.
- *
- * @author Adrian Cole
- * @author Adam Lowe
  */
 public class OperatingSystemSection extends SectionType {
 
@@ -149,7 +147,7 @@ public class OperatingSystemSection extends SectionType {
    }
 
    @Override
-   protected Objects.ToStringHelper string() {
+   protected MoreObjects.ToStringHelper string() {
       return super.string()
             .add("id", id)
             .add("version", version)

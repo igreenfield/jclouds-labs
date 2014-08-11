@@ -26,9 +26,6 @@ import org.jclouds.savvis.vpdc.domain.FirewallService;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
-/**
- * @author Kedar Dave
- */
 public class FirewallServiceHandler extends ParseSax.HandlerWithResult<FirewallService> {
    protected StringBuilder currentText = new StringBuilder();
    private FirewallRuleHandler firewallRuleHandler;
@@ -77,7 +74,7 @@ public class FirewallServiceHandler extends ParseSax.HandlerWithResult<FirewallS
       if (inFirewallRule) {
          firewallRuleHandler.endElement(uri, localName, qName);
       }
-      currentText = new StringBuilder();
+      currentText.setLength(0);
    }
 
    @Override

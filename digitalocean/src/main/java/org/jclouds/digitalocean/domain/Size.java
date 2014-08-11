@@ -22,13 +22,8 @@ import java.beans.ConstructorProperties;
 
 import javax.inject.Named;
 
-import org.jclouds.javax.annotation.Nullable;
-
 /**
  * A Size.
- * 
- * @author Sergi Castro
- * @author Ignasi Barrera
  */
 public class Size {
 
@@ -44,11 +39,10 @@ public class Size {
    private final String costPerMonth;
 
    @ConstructorProperties({ "id", "name", "slug", "memory", "cpu", "disk", "cost_per_hour", "cost_per_month" })
-   public Size(int id, String name, @Nullable String slug, int memory, int cpu, int disk, String costPerHour,
-         String costPerMonth) {
+   public Size(int id, String name, String slug, int memory, int cpu, int disk, String costPerHour, String costPerMonth) {
       this.id = id;
       this.name = checkNotNull(name, "name cannot be null");
-      this.slug = slug;
+      this.slug = checkNotNull(slug, "slug");
       this.memory = memory;
       this.cpu = cpu;
       this.disk = disk;

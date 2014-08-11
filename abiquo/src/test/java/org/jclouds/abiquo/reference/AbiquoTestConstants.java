@@ -18,10 +18,12 @@ package org.jclouds.abiquo.reference;
 
 /**
  * Configuration constants and properties used in Abiquo tests.
- * 
- * @author Ignasi Barrera
  */
-public interface AbiquoTestConstants {
+public final class AbiquoTestConstants {
    /** The prefix for test object names. */
    public static final String PREFIX = "JC-";
+
+   private AbiquoTestConstants() {
+      throw new AssertionError("intentionally unimplemented");
+   }
 }

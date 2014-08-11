@@ -23,16 +23,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Metadata about a virtual machine or grouping of them.
  *
  * Base type for Sections, subclassing this is the most common form of extensibility. Subtypes define more specific elements.
- * 
- * @author Adrian Cole
- * @author Adam Lowe
- * @author grkvlt@apache.org
  */
 @XmlType(name = "Section_Type")
 public abstract class SectionType {
@@ -138,8 +135,8 @@ public abstract class SectionType {
       return string().toString();
    }
 
-   protected Objects.ToStringHelper string() {
-      return Objects.toStringHelper("").add("info", info).add("required", required);
+   protected MoreObjects.ToStringHelper string() {
+      return MoreObjects.toStringHelper("").add("info", info).add("required", required);
    }
 
 }

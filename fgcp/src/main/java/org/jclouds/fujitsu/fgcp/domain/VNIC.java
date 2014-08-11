@@ -18,12 +18,11 @@ package org.jclouds.fujitsu.fgcp.domain;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
  * Represents a virtual network interface card (NIC).
- * 
- * @author Dies Koper
  */
 @XmlRootElement(name = "vnic")
 public class VNIC {
@@ -64,7 +63,7 @@ public class VNIC {
 
    @Override
    public String toString() {
-      return Objects.toStringHelper(this).omitNullValues()
+      return MoreObjects.toStringHelper(this).omitNullValues()
             .add("networkId", networkId).add("privateIp", privateIp)
             .add("nicNo", nicNo).toString();
    }
