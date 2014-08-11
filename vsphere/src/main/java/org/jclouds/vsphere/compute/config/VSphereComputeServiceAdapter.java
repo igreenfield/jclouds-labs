@@ -261,7 +261,11 @@ public class VSphereComputeServiceAdapter implements
                   VirtualLsiLogicController lsiLogicController = (VirtualLsiLogicController) device;
                   String dsName = vSphereHost.get().getDatastore().getName();
                   for (Volume volume : volumes) {
+
                      long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
+
+                     if (currentVolumeSize < currentDiskSize)
+                        continue;
 
                      VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
 
@@ -281,7 +285,8 @@ public class VSphereComputeServiceAdapter implements
                      disk.setControllerKey(ckey);
                      disk.setUnitNumber(unitNumber);
                      disk.setBacking(diskFileBacking);
-                     long size = currentVolumeSize;
+                     long size = currentVolumeSize - currentDiskSize;
+                     logger.trace("<< adding disk size: " + size + "KB");
                      disk.setCapacityInKB(size);
                      disk.setKey(-1);
 

@@ -41,7 +41,10 @@
     <test.vsphere.identity>FIXME_IDENTITY</test.vsphere.identity>
     <test.vsphere.credential>FIXME_CREDENTIAL</test.vsphere.credential>
     <test.vsphere.template/>
-    <jclouds.osgi.export>org.jclouds.vsphere*;version="${project.version}"</jclouds.osgi.export>
+    <jclouds.osgi.export>
+        org.jclouds.vsphere*;version="${project.version}",
+        com.vmware*;version="5.1"
+    </jclouds.osgi.export>
     <jclouds.osgi.import>
       org.jclouds.compute.internal;version="${project.version}",
       org.jclouds.rest.internal;version="${project.version}",
