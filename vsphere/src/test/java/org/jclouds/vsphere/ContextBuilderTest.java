@@ -29,7 +29,6 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
-import org.testng.annotations.Test;
 
 import java.util.Properties;
 import java.util.Set;
@@ -44,7 +43,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-@Test(groups = "unit", testName = "ContextBuilderTest")
+//@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
    public void testVSphereContext() throws RunNodesException {
       ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
