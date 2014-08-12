@@ -36,6 +36,7 @@ import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.GuestProcessInfo;
 import com.vmware.vim25.GuestProgramSpec;
 import com.vmware.vim25.NamePasswordAuthentication;
+import com.vmware.vim25.ParaVirtualSCSIController;
 import com.vmware.vim25.TaskInProgress;
 import com.vmware.vim25.VirtualCdrom;
 import com.vmware.vim25.VirtualCdromIsoBackingInfo;
@@ -254,17 +255,17 @@ public class VSphereComputeServiceAdapter implements
                      floppySpec.setDevice(vFloppy);
                      updates.add(floppySpec);
                   }
-               } else if (device instanceof VirtualLsiLogicController) {
+               } else if (device instanceof VirtualLsiLogicController || device instanceof ParaVirtualSCSIController) {
                   //int unitNumber = master.getConfig().getHardware().getDevice().length;
                   int unitNumber = numberOfHardDrives;
                   List<? extends Volume> volumes = template.getHardware().getVolumes();
-                  VirtualLsiLogicController lsiLogicController = (VirtualLsiLogicController) device;
+                  VirtualDevice controller = (VirtualDevice)device;
                   String dsName = vSphereHost.get().getDatastore().getName();
                   for (Volume volume : volumes) {
 
                      long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
 
-                     if (currentVolumeSize < currentDiskSize)
+                     if (currentVolumeSize <= currentDiskSize)
                         continue;
 
                      VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
@@ -273,7 +274,7 @@ public class VSphereComputeServiceAdapter implements
                      VirtualDiskFlatVer2BackingInfo diskFileBacking = new VirtualDiskFlatVer2BackingInfo();
 
 
-                     int ckey = lsiLogicController.getKey();
+                     int ckey = controller.getKey();
                      unitNumber++;
 
                      String fileName = "[" + dsName + "] " + name + "/" + name + unitNumber + ".vmdk";
@@ -443,10 +444,10 @@ public class VSphereComputeServiceAdapter implements
               .volume(new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build())
               .build());
 
-      hardware.add(new HardwareBuilder().ids(InstanceType.C4_M4_D10).hypervisor("vSphere").name(InstanceType.C4_M4_D10)
+      hardware.add(new HardwareBuilder().ids(InstanceType.C4_M4_D20).hypervisor("vSphere").name(InstanceType.C4_M4_D20)
               .processor(new Processor(4, 2.0))
               .ram(4096)
-              .volume(new VolumeBuilder().size(10f).type(Volume.Type.LOCAL).build())
+              .volume(new VolumeBuilder().size(20f).type(Volume.Type.LOCAL).build())
               .build());
 
       hardware.add(new HardwareBuilder().ids(InstanceType.C2_M6_D40).hypervisor("vSphere").name(InstanceType.C2_M6_D40)
@@ -829,35 +830,35 @@ public class VSphereComputeServiceAdapter implements
       //ethScript.append("hostname " + name + ";");
 
 
-      ethScript.append("\necho 'fdisk /dev/sdb <<EOF");
-      ethScript.append("\np");
-      ethScript.append("\nn");
-      ethScript.append("\np");
-      ethScript.append("\n1");
-      ethScript.append("\n");
-      ethScript.append("\n");
-      ethScript.append("\nt");
-      ethScript.append("\n8e");
-      ethScript.append("\nw");
-      ethScript.append("\nEOF' > /tmp/fdisk.sh;");
-      ethScript.append("\nchmod 0700 /tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
-      ethScript.append("\n/tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
-
-      ethScript.append("\npvcreate /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
-      ethScript.append("\nvgextend VolGroup /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
-
-      ethScript.append("\nvgdisplay VolGroup >> /tmp/volgroup 2>&1;");
-
-      ethScript.append("\nawk 'BEGIN { free=0; alloc=0; } /Alloc/ { alloc=\\$7 } /Free/ { free=\\$7 } END { print \\\"-L+\\\" free - alloc \\\"G\\\" }' /tmp/volgroup | xargs lvextend /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
-      ethScript.append("\nresize2fs /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
+//      ethScript.append("\necho 'fdisk /dev/sdb <<EOF");
+//      ethScript.append("\np");
+//      ethScript.append("\nn");
+//      ethScript.append("\np");
+//      ethScript.append("\n1");
+//      ethScript.append("\n");
+//      ethScript.append("\n");
+//      ethScript.append("\nt");
+//      ethScript.append("\n8e");
+//      ethScript.append("\nw");
+//      ethScript.append("\nEOF' > /tmp/fdisk.sh;");
+//      ethScript.append("\nchmod 0700 /tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
+//      ethScript.append("\n/tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
+//
+//      ethScript.append("\npvcreate /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
+//      ethScript.append("\nvgextend VolGroup /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
+//
+//      ethScript.append("\nvgdisplay VolGroup >> /tmp/volgroup 2>&1;");
+//
+//      ethScript.append("\nawk 'BEGIN { free=0; alloc=0; } /Alloc/ { alloc=\\$7 } /Free/ { free=\\$7 } END { print \\\"-L+\\\" free - alloc \\\"G\\\" }' /tmp/volgroup | xargs lvextend /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
+//      ethScript.append("\nresize2fs /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
 
       ethScript.append("\nmkdir -p ~/.ssh;");
       ethScript.append("\nrestorecon -FRvv ~/.ssh;");
 
-      ethScript.append("\nservice network reload;");
+//      ethScript.append("\nservice network reload;");
 
-      ethScript.append("\nrm -f /tmp/fdisk.sh;");
-      ethScript.append("\nrm -f /tmp/volgroup;");
+//      ethScript.append("\nrm -f /tmp/fdisk.sh;");
+//      ethScript.append("\nrm -f /tmp/volgroup;");
 
       gps.arguments = "-c \"" + ethScript.toString() + "\"";
 

@@ -39,7 +39,7 @@ public class InstanceType {
 
    public static final String C3_M10_D80 = "C3_M10_D80";
 
-   public static final String C4_M4_D10 = "C4.M4.D10";
+   public static final String C4_M4_D20 = "C4.M4.D20";
 
    public static final String C2_M6_D40 = "C2.M6.D40";
 
