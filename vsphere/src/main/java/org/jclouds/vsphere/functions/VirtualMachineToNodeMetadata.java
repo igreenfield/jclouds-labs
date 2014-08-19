@@ -171,6 +171,9 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                             }
                          }
                       }
+                      if (ipv4Addresses.size() < 1) {
+                         Thread.sleep(1000);
+                      }
                    }
                    nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));
                    nodeMetadataBuilder.privateAddresses(filter(ipv4Addresses, isPrivateAddress));

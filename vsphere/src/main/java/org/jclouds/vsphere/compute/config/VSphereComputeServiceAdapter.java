@@ -337,7 +337,7 @@ public class VSphereComputeServiceAdapter implements
                   }
                }
             } catch (Exception e) {
-               logger.error("Can't clone vm " + master.getName(), e);
+               logger.error("Can't clone vm " + master.getName() + ", Error message: " + e.toString(), e);
                propagate(e);
             }
 
@@ -622,16 +622,28 @@ public class VSphereComputeServiceAdapter implements
          Task task = master.cloneVM_Task(folder, name, cloneSpec);
          String result = task.waitForTask();
          if (result.equals(Task.SUCCESS)) {
-            cloned = (VirtualMachine) new InventoryNavigator(folder).searchManagedEntity("VirtualMachine", name);
+               while (cloned == null) {
+                  logger.trace("<< after clone search for VM with name: " + name);
+                  cloned = (VirtualMachine) new InventoryNavigator(folder).searchManagedEntity("VirtualMachine", name);
+                  sleep(500);
+               }
          } else {
             String errorMessage = task.getTaskInfo().getError().getLocalizedMessage();
             logger.error(errorMessage);
          }
       } catch (Exception e) {
-         logger.error("Can't clone vm", e);
+         logger.error("Can't clone vm: " + e.toString(), e);
          propagate(e);
       }
       return checkNotNull(cloned, "cloned");
+   }
+
+   private static void sleep(long time) {
+      try {
+         Thread.sleep(time);
+      } catch (InterruptedException e) {
+
+      }
    }
 
    private ResourcePool tryFindResourcePool(Folder folder, String hostname) {
@@ -852,6 +864,7 @@ public class VSphereComputeServiceAdapter implements
 //      ethScript.append("\nawk 'BEGIN { free=0; alloc=0; } /Alloc/ { alloc=\\$7 } /Free/ { free=\\$7 } END { print \\\"-L+\\\" free - alloc \\\"G\\\" }' /tmp/volgroup | xargs lvextend /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
 //      ethScript.append("\nresize2fs /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
 
+      ethScript.append("\nsleep 5;");
       ethScript.append("\nmkdir -p ~/.ssh;");
       ethScript.append("\nrestorecon -FRvv ~/.ssh;");
 
@@ -882,15 +895,15 @@ public class VSphereComputeServiceAdapter implements
                   processInfo = processInfos[0];
                }
                if (processInfo.getExitCode() != 0) {
-                  logger.error("failed to run init script on node ( " + name + " ) exit code : " + processInfo.getExitCode());
-                  Throwables.propagate(new Exception("Failed to customize vm ( " + name + " )"));
+                  logger.warn("failed to run init script on node ( " + name + " ) exit code : " + processInfo.getExitCode());
+                  //Throwables.propagate(new Exception("Failed to customize vm ( " + name + " )"));
                }
             }
          }
          logger.trace("<< process pid : " + pid);
       } catch (RemoteException e) {
-         logger.error(e.getMessage(), e);
-         Throwables.propagate(e);
+         logger.warn(e.getMessage(), e);
+         //Throwables.propagate(e);
       }
 
    }
