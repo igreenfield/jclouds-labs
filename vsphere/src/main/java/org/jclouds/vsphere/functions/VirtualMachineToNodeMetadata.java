@@ -24,6 +24,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
@@ -31,11 +32,22 @@ import com.google.inject.Singleton;
 import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.CustomFieldStringValue;
 import com.vmware.vim25.CustomFieldValue;
+import com.vmware.vim25.DistributedVirtualSwitchPortConnection;
 import com.vmware.vim25.GuestNicInfo;
+import com.vmware.vim25.VirtualDevice;
+import com.vmware.vim25.VirtualDeviceBackingInfo;
+import com.vmware.vim25.VirtualDeviceConfigSpec;
+import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
+import com.vmware.vim25.VirtualEthernetCard;
+import com.vmware.vim25.VirtualEthernetCardDistributedVirtualPortBackingInfo;
+import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
+import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineToolsStatus;
+import com.vmware.vim25.mo.DistributedVirtualPortgroup;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.ManagedEntity;
+import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadata.Status;
@@ -57,6 +69,8 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.rmi.RemoteException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -77,14 +91,17 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
     private final Map<VirtualMachinePowerState, Status> toPortableNodeStatus;
     private final Supplier<Map<String, CustomFieldDef>> customFields;
     private final Supplier<VSphereServiceInstance> serviceInstanceSupplier;
+   private final Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction;
 
     @Inject
     public VirtualMachineToNodeMetadata(Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus,
                                         Supplier<Map<String, CustomFieldDef>> customFields,
-                                        Supplier<VSphereServiceInstance> serviceInstanceSupplier) {
+                                        Supplier<VSphereServiceInstance> serviceInstanceSupplier,
+                                        Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction) {
         this.toPortableNodeStatus = checkNotNull(toPortableNodeStatus, "PortableNodeStatus");
         this.customFields = checkNotNull(customFields, "customFields");
         this.serviceInstanceSupplier = checkNotNull(serviceInstanceSupplier, "serviceInstanceSupplier");
+       this.distributedVirtualPortgroupFunction = checkNotNull(distributedVirtualPortgroupFunction,"distributedVirtualPortgroupFunction");
     }
 
     @Override
@@ -172,6 +189,8 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                          }
                       }
                       if (ipv4Addresses.size() < 1) {
+                         nicConfigurationRecovery(instance, freshVm);
+
                          Thread.sleep(1000);
                       }
                    }
@@ -203,7 +222,80 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
         return nodeMetadataBuilder.build();
     }
 
-    Predicate<String> ipAddressTester = new Predicate<String>() {
+   private void nicConfigurationRecovery(VSphereServiceInstance instance, VirtualMachine freshVm) throws RemoteException, InterruptedException {
+      List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
+      for (VirtualDevice device : freshVm.getConfig().getHardware().getDevice()) {
+         if (device instanceof VirtualEthernetCard) {
+            VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
+            VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
+            ethernetCard.getConnectable().setConnected(true);
+            VirtualDeviceBackingInfo backingInfo = ethernetCard.getBacking();
+            String originalKey = "";
+            if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo){
+               ManagedEntity[] virtualPortgroups = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("DistributedVirtualPortgroup");
+               VirtualEthernetCardDistributedVirtualPortBackingInfo virtualPortBackingInfo = (VirtualEthernetCardDistributedVirtualPortBackingInfo) backingInfo;
+               DistributedVirtualPortgroup virtualPortgroup = null;
+               originalKey = virtualPortBackingInfo.getPort().getPortKey();
+               for (ManagedEntity entity : virtualPortgroups) {
+                  virtualPortgroup = (DistributedVirtualPortgroup)entity;
+                  if (virtualPortgroup.getKey() != originalKey) {
+                     break;
+                  }
+               }
+               DistributedVirtualSwitchPortConnection port = virtualPortBackingInfo.getPort();
+               port.setPortgroupKey(virtualPortgroup.getKey());
+            }
+            else {
+               VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
+               originalKey = networkBackingInfo.getDeviceName();
+               networkBackingInfo.setDeviceName("VM Network");
+            }
+
+            nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+            nicSpec.setDevice(device);
+
+            updates.add(nicSpec);
+         }
+      }
+      VirtualMachineConfigSpec spec = new VirtualMachineConfigSpec();
+      spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+      Task task = freshVm.reconfigVM_Task(spec);
+      String result = task.waitForTask();
+      if (result.equals(Task.SUCCESS)){
+         updates.clear();
+         for (VirtualDevice device : freshVm.getConfig().getHardware().getDevice()) {
+            if (device instanceof VirtualEthernetCard) {
+               VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
+               VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
+               ethernetCard.getConnectable().setConnected(true);
+               VirtualDeviceBackingInfo backingInfo = ethernetCard.getBacking();
+               String originalKey = "";
+               if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo){
+                  VirtualEthernetCardDistributedVirtualPortBackingInfo virtualPortBackingInfo = (VirtualEthernetCardDistributedVirtualPortBackingInfo) backingInfo;
+                  DistributedVirtualSwitchPortConnection port = virtualPortBackingInfo.getPort();
+                  port.setPortgroupKey(originalKey);
+                  virtualPortBackingInfo.setPort(port);
+               }
+               else {
+                  VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
+                  originalKey = networkBackingInfo.getDeviceName();
+                  networkBackingInfo.setDeviceName("VM Network");
+               }
+
+               nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+               nicSpec.setDevice(device);
+
+               updates.add(nicSpec);
+            }
+         }
+         spec = new VirtualMachineConfigSpec();
+         spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+         task = freshVm.reconfigVM_Task(spec);
+         result = task.waitForTask();
+      }
+   }
+
+   Predicate<String> ipAddressTester = new Predicate<String>() {
 
         @Override
         public boolean apply(String input) {

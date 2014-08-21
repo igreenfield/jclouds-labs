@@ -624,7 +624,11 @@ public class VSphereComputeServiceAdapter implements
          if (result.equals(Task.SUCCESS)) {
                while (cloned == null) {
                   logger.trace("<< after clone search for VM with name: " + name);
-                  cloned = (VirtualMachine) new InventoryNavigator(folder).searchManagedEntity("VirtualMachine", name);
+                  cloned = getVM(name, folder);
+                  if (cloned == null)
+                     folder = serviceInstance.get().getInstance().getRootFolder();
+                  else
+                     break;
                   sleep(500);
                }
          } else {
@@ -878,10 +882,10 @@ public class VSphereComputeServiceAdapter implements
       List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin",
               "SHELL=/bin/bash");
 
-      waitForsStateToChange();
+      waitForStateToChange();
       if (!vm.getConfig().isTemplate())
          VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 60, TimeUnit.MILLISECONDS).apply(vm);
-      waitForsStateToChange();
+      waitForStateToChange();
 
       gps.setEnvVariables(env.toArray(new String[env.size()]));
       GuestProcessManager gpm = gom.getProcessManager(vm);
@@ -901,14 +905,14 @@ public class VSphereComputeServiceAdapter implements
             }
          }
          logger.trace("<< process pid : " + pid);
-      } catch (RemoteException e) {
+      } catch (Exception e) {
          logger.warn(e.getMessage(), e);
          //Throwables.propagate(e);
       }
 
    }
 
-   private void waitForsStateToChange() {
+   private void waitForStateToChange() {
       try {
          Thread.sleep(10 * 1000);
       } catch (InterruptedException e) {
