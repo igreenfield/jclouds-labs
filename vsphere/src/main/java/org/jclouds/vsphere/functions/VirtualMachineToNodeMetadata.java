@@ -224,14 +224,16 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
 
    private void nicConfigurationRecovery(VSphereServiceInstance instance, VirtualMachine freshVm) throws RemoteException, InterruptedException {
       List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
+      String originalKey = "";
       for (VirtualDevice device : freshVm.getConfig().getHardware().getDevice()) {
          if (device instanceof VirtualEthernetCard) {
             VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
             VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
             ethernetCard.getConnectable().setConnected(true);
             VirtualDeviceBackingInfo backingInfo = ethernetCard.getBacking();
-            String originalKey = "";
-            if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo){
+
+            logger.trace(">> VirtualDeviceBackingInfo: " + backingInfo.getClass().getName());
+            if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo) {
                ManagedEntity[] virtualPortgroups = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("DistributedVirtualPortgroup");
                VirtualEthernetCardDistributedVirtualPortBackingInfo virtualPortBackingInfo = (VirtualEthernetCardDistributedVirtualPortBackingInfo) backingInfo;
                DistributedVirtualPortgroup virtualPortgroup = null;
@@ -242,8 +244,12 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                      break;
                   }
                }
-               DistributedVirtualSwitchPortConnection port = virtualPortBackingInfo.getPort();
+
+               DistributedVirtualSwitchPortConnection port = new DistributedVirtualSwitchPortConnection();
+               DistributedVirtualSwitchPortConnection origPort = virtualPortBackingInfo.getPort();
                port.setPortgroupKey(virtualPortgroup.getKey());
+               port.setSwitchUuid(origPort.getSwitchUuid());
+               virtualPortBackingInfo.setPort(port);
             }
             else {
                VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
@@ -269,17 +275,18 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
                ethernetCard.getConnectable().setConnected(true);
                VirtualDeviceBackingInfo backingInfo = ethernetCard.getBacking();
-               String originalKey = "";
-               if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo){
+
+               if (backingInfo instanceof VirtualEthernetCardDistributedVirtualPortBackingInfo) {
                   VirtualEthernetCardDistributedVirtualPortBackingInfo virtualPortBackingInfo = (VirtualEthernetCardDistributedVirtualPortBackingInfo) backingInfo;
-                  DistributedVirtualSwitchPortConnection port = virtualPortBackingInfo.getPort();
+                  DistributedVirtualSwitchPortConnection port = new DistributedVirtualSwitchPortConnection();
+                  DistributedVirtualSwitchPortConnection origPort = virtualPortBackingInfo.getPort();
                   port.setPortgroupKey(originalKey);
+                  port.setSwitchUuid(origPort.getSwitchUuid());
                   virtualPortBackingInfo.setPort(port);
                }
                else {
                   VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
-                  originalKey = networkBackingInfo.getDeviceName();
-                  networkBackingInfo.setDeviceName("VM Network");
+                  networkBackingInfo.setDeviceName(originalKey);
                }
 
                nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
