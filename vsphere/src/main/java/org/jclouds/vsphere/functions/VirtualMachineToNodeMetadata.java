@@ -34,6 +34,9 @@ import com.vmware.vim25.CustomFieldStringValue;
 import com.vmware.vim25.CustomFieldValue;
 import com.vmware.vim25.DistributedVirtualSwitchPortConnection;
 import com.vmware.vim25.GuestNicInfo;
+import com.vmware.vim25.GuestProcessInfo;
+import com.vmware.vim25.GuestProgramSpec;
+import com.vmware.vim25.NamePasswordAuthentication;
 import com.vmware.vim25.VirtualDevice;
 import com.vmware.vim25.VirtualDeviceBackingInfo;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
@@ -45,6 +48,9 @@ import com.vmware.vim25.VirtualMachineConfigSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.mo.DistributedVirtualPortgroup;
+import com.vmware.vim25.mo.GuestAuthManager;
+import com.vmware.vim25.mo.GuestOperationsManager;
+import com.vmware.vim25.mo.GuestProcessManager;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.Task;
@@ -92,16 +98,19 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
     private final Supplier<Map<String, CustomFieldDef>> customFields;
     private final Supplier<VSphereServiceInstance> serviceInstanceSupplier;
    private final Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction;
+   protected String vmInitPassword = null;
 
     @Inject
     public VirtualMachineToNodeMetadata(Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus,
                                         Supplier<Map<String, CustomFieldDef>> customFields,
                                         Supplier<VSphereServiceInstance> serviceInstanceSupplier,
-                                        Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction) {
+                                        Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction,
+                                        @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
         this.toPortableNodeStatus = checkNotNull(toPortableNodeStatus, "PortableNodeStatus");
         this.customFields = checkNotNull(customFields, "customFields");
         this.serviceInstanceSupplier = checkNotNull(serviceInstanceSupplier, "serviceInstanceSupplier");
        this.distributedVirtualPortgroupFunction = checkNotNull(distributedVirtualPortgroupFunction,"distributedVirtualPortgroupFunction");
+       this.vmInitPassword = vmInitPassword;
     }
 
     @Override
@@ -237,7 +246,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                ManagedEntity[] virtualPortgroups = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("DistributedVirtualPortgroup");
                VirtualEthernetCardDistributedVirtualPortBackingInfo virtualPortBackingInfo = (VirtualEthernetCardDistributedVirtualPortBackingInfo) backingInfo;
                DistributedVirtualPortgroup virtualPortgroup = null;
-               originalKey = virtualPortBackingInfo.getPort().getPortKey();
+               originalKey = virtualPortBackingInfo.getPort().getPortgroupKey();
                for (ManagedEntity entity : virtualPortgroups) {
                   virtualPortgroup = (DistributedVirtualPortgroup)entity;
                   if (virtualPortgroup.getKey() != originalKey) {
@@ -299,6 +308,33 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
          spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
          task = freshVm.reconfigVM_Task(spec);
          result = task.waitForTask();
+
+         if (result.equals(Task.SUCCESS)) {
+            GuestOperationsManager gom = serviceInstanceSupplier.get().getInstance().getGuestOperationsManager();
+            GuestAuthManager gam = gom.getAuthManager(freshVm);
+            final NamePasswordAuthentication npa = new NamePasswordAuthentication();
+            npa.setUsername("root");
+            npa.setPassword(vmInitPassword);
+            GuestProgramSpec gps = new GuestProgramSpec();
+            gps.programPath = "/bin/sh";
+            gps.arguments = "-c \"service network restart\"";
+            List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin", "SHELL=/bin/bash");
+            gps.setEnvVariables(env.toArray(new String[env.size()]));
+            GuestProcessManager gpm = gom.getProcessManager(freshVm);
+            final long pid = gpm.startProgramInGuest(npa, gps);
+            Predicates2.retry(new Predicate<GuestProcessManager>() {
+               @Override
+               public boolean apply(GuestProcessManager o) {
+                  try {
+                     GuestProcessInfo[] guestProcessInfos = o.listProcessesInGuest(npa, new long[]{pid});
+                     return guestProcessInfos == null || guestProcessInfos.length == 0;
+                  } catch (RemoteException e) {
+                     return false;
+                  }
+
+               }
+            }, 20 * 1000, 1000, TimeUnit.MILLISECONDS).apply(gpm);
+         }
       }
    }
 
