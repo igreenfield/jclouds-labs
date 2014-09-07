@@ -89,147 +89,148 @@ import static com.google.common.collect.Sets.newHashSet;
 @Singleton
 public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, NodeMetadata> {
 
-    public static final Splitter COMMA_SPLITTER = Splitter.on(",");
-    @Resource
-    @Named(ComputeServiceConstants.COMPUTE_LOGGER)
-    protected Logger logger = Logger.NULL;
+   public static final Splitter COMMA_SPLITTER = Splitter.on(",");
+   @Resource
+   @Named(ComputeServiceConstants.COMPUTE_LOGGER)
+   protected Logger logger = Logger.NULL;
 
-    private final Map<VirtualMachinePowerState, Status> toPortableNodeStatus;
-    private final Supplier<Map<String, CustomFieldDef>> customFields;
-    private final Supplier<VSphereServiceInstance> serviceInstanceSupplier;
+   private final Map<VirtualMachinePowerState, Status> toPortableNodeStatus;
+   private final Supplier<Map<String, CustomFieldDef>> customFields;
+   private final Supplier<VSphereServiceInstance> serviceInstanceSupplier;
    private final Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction;
    protected String vmInitPassword = null;
 
-    @Inject
-    public VirtualMachineToNodeMetadata(Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus,
-                                        Supplier<Map<String, CustomFieldDef>> customFields,
-                                        Supplier<VSphereServiceInstance> serviceInstanceSupplier,
-                                        Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction,
-                                        @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
-        this.toPortableNodeStatus = checkNotNull(toPortableNodeStatus, "PortableNodeStatus");
-        this.customFields = checkNotNull(customFields, "customFields");
-        this.serviceInstanceSupplier = checkNotNull(serviceInstanceSupplier, "serviceInstanceSupplier");
-       this.distributedVirtualPortgroupFunction = checkNotNull(distributedVirtualPortgroupFunction,"distributedVirtualPortgroupFunction");
-       this.vmInitPassword = vmInitPassword;
-    }
+   @Inject
+   public VirtualMachineToNodeMetadata(Map<VirtualMachinePowerState, NodeMetadata.Status> toPortableNodeStatus,
+                                       Supplier<Map<String, CustomFieldDef>> customFields,
+                                       Supplier<VSphereServiceInstance> serviceInstanceSupplier,
+                                       Function<String, DistributedVirtualPortgroup> distributedVirtualPortgroupFunction,
+                                       @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
+      this.toPortableNodeStatus = checkNotNull(toPortableNodeStatus, "PortableNodeStatus");
+      this.customFields = checkNotNull(customFields, "customFields");
+      this.serviceInstanceSupplier = checkNotNull(serviceInstanceSupplier, "serviceInstanceSupplier");
+      this.distributedVirtualPortgroupFunction = checkNotNull(distributedVirtualPortgroupFunction, "distributedVirtualPortgroupFunction");
+      this.vmInitPassword = vmInitPassword;
+   }
 
-    @Override
-    public NodeMetadata apply(VirtualMachine vm) {
-        Closer closer = Closer.create();
-        VSphereServiceInstance instance = serviceInstanceSupplier.get();
-        closer.register(instance);
-        VirtualMachine freshVm = null;
-        String virtualMachineName = "";
-        NodeMetadataBuilder nodeMetadataBuilder = new NodeMetadataBuilder();
-        try {
-            try {
-                String vmMORId = vm.getMOR().get_value();
-                ManagedEntity[] vms = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("VirtualMachine");
-                for (ManagedEntity machine : vms) {
+   @Override
+   public NodeMetadata apply(VirtualMachine vm) {
+      Closer closer = Closer.create();
+      VSphereServiceInstance instance = serviceInstanceSupplier.get();
+      closer.register(instance);
+      VirtualMachine freshVm = null;
+      String virtualMachineName = "";
+      NodeMetadataBuilder nodeMetadataBuilder = new NodeMetadataBuilder();
+      try {
+         try {
+            String vmMORId = vm.getMOR().get_value();
+            ManagedEntity[] vms = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("VirtualMachine");
+            for (ManagedEntity machine : vms) {
 
-                    if (machine.getMOR().getVal().equals(vmMORId)) {
-                        freshVm = (VirtualMachine) machine;
-                        break;
-                    }
-                }
-                LocationBuilder locationBuilder = new LocationBuilder();
-                locationBuilder.description("");
-                locationBuilder.id("");
-                locationBuilder.scope(LocationScope.HOST);
-
-                virtualMachineName = freshVm.getName();
-
-                VirtualMachinePowerState vmState = freshVm.getRuntime().getPowerState();
-                NodeMetadata.Status nodeState = toPortableNodeStatus.get(vmState);
-                if (nodeState == null)
-                    nodeState = Status.UNRECOGNIZED;
-
-
-                nodeMetadataBuilder.name(virtualMachineName).ids(virtualMachineName)
-                        .location(locationBuilder.build())
-                        .hostname(virtualMachineName);
-
-                String host = freshVm.getServerConnection().getUrl().getHost();
-
-                try {
-                    nodeMetadataBuilder.uri(new URI("https://" + host + ":9443/vsphere-client/vmrc/vmrc.jsp?vm=urn:vmomi:VirtualMachine:" + vmMORId + ":" + freshVm.getSummary().getConfig().getUuid()));
-                } catch (URISyntaxException e) {
-                }
-
-
-                Set<String> ipv4Addresses = newHashSet();
-                Set<String> ipv6Addresses = newHashSet();
-
-                if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate()) {
-                    Predicates2.retry(new Predicate<VirtualMachine>() {
-                        @Override
-                        public boolean apply(VirtualMachine vm) {
-                            try {
-                                return !Strings.isNullOrEmpty(vm.getGuest().getIpAddress());
-                            } catch (Exception e) {
-                                return false;
-                            }
-                        }
-                    }, 60 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
-                }
-
-
-                if (VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsNotInstalled).apply(freshVm))
-                    logger.trace("<< No VMware tools installed ( " + virtualMachineName + " )");
-                else if (nodeState == Status.RUNNING && not(VSpherePredicate.isTemplatePredicate).apply(freshVm)) {
-                   while (ipv4Addresses.size() < 1) {
-                      ipv4Addresses.clear();
-                      ipv6Addresses.clear();
-                      GuestNicInfo[] nics = freshVm.getGuest().getNet();
-                      if (null != nics) {
-                         for (GuestNicInfo nic : nics) {
-                            String[] addresses = nic.getIpAddress();
-                            if (null != addresses) {
-                               for (String address : addresses) {
-                                  if (logger.isTraceEnabled())
-                                     logger.trace("<< find IP addresses " + address + " for " + virtualMachineName);
-                                  if (isInet4Address.apply(address)) {
-                                     ipv4Addresses.add(address);
-                                  } else if (isInet6Address.apply(address)) {
-                                     ipv6Addresses.add(address);
-                                  }
-                               }
-                            }
-                         }
-                      }
-                      if (ipv4Addresses.size() < 1) {
-                         nicConfigurationRecovery(instance, freshVm);
-
-                         Thread.sleep(1000);
-                      }
-                   }
-                   nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));
-                   nodeMetadataBuilder.privateAddresses(filter(ipv4Addresses, isPrivateAddress));
-                }
-
-                CustomFieldValue[] customFieldValues = freshVm.getCustomValue();
-                if (customFieldValues != null) {
-                    for (CustomFieldValue customFieldValue : customFieldValues) {
-                        if (customFieldValue.getKey() == customFields.get().get(VSphereConstants.JCLOUDS_TAGS).getKey()) {
-                            nodeMetadataBuilder.tags(COMMA_SPLITTER.split(((CustomFieldStringValue) customFieldValue).getValue()));
-                        } else if (customFieldValue.getKey() == customFields.get().get(VSphereConstants.JCLOUDS_GROUP).getKey()) {
-                            nodeMetadataBuilder.group(((CustomFieldStringValue) customFieldValue).getValue());
-                        }
-                    }
-                }
-                nodeMetadataBuilder.status(nodeState);
-                return nodeMetadataBuilder.build();
-            } catch (Throwable t) {
-                logger.error("Got an exception for virtual machine name : " + virtualMachineName);
-                Throwables.propagate(closer.rethrow(t));
-            } finally {
-                closer.close();
+               if (machine.getMOR().getVal().equals(vmMORId)) {
+                  freshVm = (VirtualMachine) machine;
+                  break;
+               }
             }
-        } catch (IOException e) {
+            LocationBuilder locationBuilder = new LocationBuilder();
+            locationBuilder.description("");
+            locationBuilder.id("");
+            locationBuilder.scope(LocationScope.HOST);
+
+            virtualMachineName = freshVm.getName();
+
+            VirtualMachinePowerState vmState = freshVm.getRuntime().getPowerState();
+            NodeMetadata.Status nodeState = toPortableNodeStatus.get(vmState);
+            if (nodeState == null)
+               nodeState = Status.UNRECOGNIZED;
+
+
+            nodeMetadataBuilder.name(virtualMachineName).ids(virtualMachineName)
+                    .location(locationBuilder.build())
+                    .hostname(virtualMachineName);
+
+            String host = freshVm.getServerConnection().getUrl().getHost();
+
+            try {
+               nodeMetadataBuilder.uri(new URI("https://" + host + ":9443/vsphere-client/vmrc/vmrc.jsp?vm=urn:vmomi:VirtualMachine:" + vmMORId + ":" + freshVm.getSummary().getConfig().getUuid()));
+            } catch (URISyntaxException e) {
+            }
+
+
+            Set<String> ipv4Addresses = newHashSet();
+            Set<String> ipv6Addresses = newHashSet();
+
+            if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate()) {
+               Predicates2.retry(new Predicate<VirtualMachine>() {
+                  @Override
+                  public boolean apply(VirtualMachine vm) {
+                     try {
+                        return !Strings.isNullOrEmpty(vm.getGuest().getIpAddress());
+                     } catch (Exception e) {
+                        return false;
+                     }
+                  }
+               }, 60 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
+            }
+
+
+            if (VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsNotInstalled).apply(freshVm))
+               logger.trace("<< No VMware tools installed ( " + virtualMachineName + " )");
+            else if (nodeState == Status.RUNNING && not(VSpherePredicate.isTemplatePredicate).apply(freshVm)) {
+               while (ipv4Addresses.size() < 1) {
+                  ipv4Addresses.clear();
+                  ipv6Addresses.clear();
+                  GuestNicInfo[] nics = freshVm.getGuest().getNet();
+                  if (null != nics) {
+                     for (GuestNicInfo nic : nics) {
+                        String[] addresses = nic.getIpAddress();
+                        if (null != addresses) {
+                           for (String address : addresses) {
+                              if (logger.isTraceEnabled())
+                                 logger.trace("<< find IP addresses " + address + " for " + virtualMachineName);
+                              if (isInet4Address.apply(address)) {
+                                 ipv4Addresses.add(address);
+                              } else if (isInet6Address.apply(address)) {
+                                 ipv6Addresses.add(address);
+                              }
+                           }
+                        }
+                     }
+                  }
+                  if (ipv4Addresses.size() < 1) {
+                     //nicConfigurationRecovery(instance, freshVm);
+                     logger.error("<< cant find IPv4 address for vm: " + virtualMachineName);
+                     break;
+                     //Thread.sleep(1000);
+                  }
+               }
+               nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));
+               nodeMetadataBuilder.privateAddresses(filter(ipv4Addresses, isPrivateAddress));
+            }
+
+            CustomFieldValue[] customFieldValues = freshVm.getCustomValue();
+            if (customFieldValues != null) {
+               for (CustomFieldValue customFieldValue : customFieldValues) {
+                  if (customFieldValue.getKey() == customFields.get().get(VSphereConstants.JCLOUDS_TAGS).getKey()) {
+                     nodeMetadataBuilder.tags(COMMA_SPLITTER.split(((CustomFieldStringValue) customFieldValue).getValue()));
+                  } else if (customFieldValue.getKey() == customFields.get().get(VSphereConstants.JCLOUDS_GROUP).getKey()) {
+                     nodeMetadataBuilder.group(((CustomFieldStringValue) customFieldValue).getValue());
+                  }
+               }
+            }
+            nodeMetadataBuilder.status(nodeState);
             return nodeMetadataBuilder.build();
-        }
-        return nodeMetadataBuilder.build();
-    }
+         } catch (Throwable t) {
+            logger.error("Got an exception for virtual machine name : " + virtualMachineName);
+            Throwables.propagate(closer.rethrow(t));
+         } finally {
+            closer.close();
+         }
+      } catch (IOException e) {
+         return nodeMetadataBuilder.build();
+      }
+      return nodeMetadataBuilder.build();
+   }
 
    private void nicConfigurationRecovery(VSphereServiceInstance instance, VirtualMachine freshVm) throws RemoteException, InterruptedException {
       List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
@@ -248,7 +249,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                DistributedVirtualPortgroup virtualPortgroup = null;
                originalKey = virtualPortBackingInfo.getPort().getPortgroupKey();
                for (ManagedEntity entity : virtualPortgroups) {
-                  virtualPortgroup = (DistributedVirtualPortgroup)entity;
+                  virtualPortgroup = (DistributedVirtualPortgroup) entity;
                   if (virtualPortgroup.getKey() != originalKey) {
                      break;
                   }
@@ -259,9 +260,8 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                port.setPortgroupKey(virtualPortgroup.getKey());
                port.setSwitchUuid(origPort.getSwitchUuid());
                virtualPortBackingInfo.setPort(port);
-            }
-            else {
-               VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
+            } else {
+               VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo) backingInfo;
                originalKey = networkBackingInfo.getDeviceName();
                networkBackingInfo.setDeviceName("VM Network");
             }
@@ -276,7 +276,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
       spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
       Task task = freshVm.reconfigVM_Task(spec);
       String result = task.waitForTask();
-      if (result.equals(Task.SUCCESS)){
+      if (result.equals(Task.SUCCESS)) {
          updates.clear();
          for (VirtualDevice device : freshVm.getConfig().getHardware().getDevice()) {
             if (device instanceof VirtualEthernetCard) {
@@ -292,9 +292,8 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                   port.setPortgroupKey(originalKey);
                   port.setSwitchUuid(origPort.getSwitchUuid());
                   virtualPortBackingInfo.setPort(port);
-               }
-               else {
-                  VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo)backingInfo;
+               } else {
+                  VirtualEthernetCardNetworkBackingInfo networkBackingInfo = (VirtualEthernetCardNetworkBackingInfo) backingInfo;
                   networkBackingInfo.setDeviceName(originalKey);
                }
 
@@ -340,43 +339,43 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
 
    Predicate<String> ipAddressTester = new Predicate<String>() {
 
-        @Override
-        public boolean apply(String input) {
-            return !input.isEmpty();
-        }
+      @Override
+      public boolean apply(String input) {
+         return !input.isEmpty();
+      }
 
-    };
+   };
 
-    private static final Predicate<String> isPrivateAddress = new Predicate<String>() {
-        public boolean apply(String in) {
-            return InetAddresses2.IsPrivateIPAddress.INSTANCE.apply(in);
-        }
-    };
+   private static final Predicate<String> isPrivateAddress = new Predicate<String>() {
+      public boolean apply(String in) {
+         return InetAddresses2.IsPrivateIPAddress.INSTANCE.apply(in);
+      }
+   };
 
-    public static final Predicate<String> isInet4Address = new Predicate<String>() {
-        @Override
-        public boolean apply(String input) {
-            try {
-                // Note we can do this, as InetAddress is now on the white list
-                return InetAddresses.forString(input) instanceof Inet4Address;
-            } catch (IllegalArgumentException e) {
-                // could be a hostname
-                return false;
-            }
-        }
+   public static final Predicate<String> isInet4Address = new Predicate<String>() {
+      @Override
+      public boolean apply(String input) {
+         try {
+            // Note we can do this, as InetAddress is now on the white list
+            return InetAddresses.forString(input) instanceof Inet4Address;
+         } catch (IllegalArgumentException e) {
+            // could be a hostname
+            return false;
+         }
+      }
 
-    };
-    public static final Predicate<String> isInet6Address = new Predicate<String>() {
-        @Override
-        public boolean apply(String input) {
-            try {
-                // Note we can do this, as InetAddress is now on the white list
-                return InetAddresses.forString(input) instanceof Inet6Address;
-            } catch (IllegalArgumentException e) {
-                // could be a hostname
-                return false;
-            }
-        }
+   };
+   public static final Predicate<String> isInet6Address = new Predicate<String>() {
+      @Override
+      public boolean apply(String input) {
+         try {
+            // Note we can do this, as InetAddress is now on the white list
+            return InetAddresses.forString(input) instanceof Inet6Address;
+         } catch (IllegalArgumentException e) {
+            // could be a hostname
+            return false;
+         }
+      }
 
-    };
+   };
 }
