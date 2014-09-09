@@ -868,7 +868,7 @@ public class VSphereComputeServiceAdapter implements
 //      ethScript.append("\nawk 'BEGIN { free=0; alloc=0; } /Alloc/ { alloc=\\$7 } /Free/ { free=\\$7 } END { print \\\"-L+\\\" free - alloc \\\"G\\\" }' /tmp/volgroup | xargs lvextend /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
 //      ethScript.append("\nresize2fs /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
 
-      ethScript.append("\nsleep 5;");
+      ethScript.append("\n[ -f /etc/resolv.conf ] && grep nameserver /etc/resolv.conf | awk '{ if(length($2) > 0) system(\"ping -c 4 \" $2) | getline D; }';");
       ethScript.append("\nmkdir -p ~/.ssh;");
       ethScript.append("\nrestorecon -FRvv ~/.ssh;");
 
@@ -906,7 +906,7 @@ public class VSphereComputeServiceAdapter implements
          }
          logger.trace("<< process pid : " + pid);
       } catch (Exception e) {
-         logger.warn(e.getMessage(), e);
+         //logger.warn(e.getMessage(), e);
          //Throwables.propagate(e);
       }
 
