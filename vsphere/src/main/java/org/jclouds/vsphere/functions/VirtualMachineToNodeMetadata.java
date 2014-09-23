@@ -1,20 +1,18 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jclouds.vsphere.functions;
 
@@ -137,7 +135,13 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
             locationBuilder.id("");
             locationBuilder.scope(LocationScope.HOST);
 
+            if (freshVm == null) {
+               nodeMetadataBuilder.status(Status.ERROR).id("");
+               return nodeMetadataBuilder.build();
+            }
             virtualMachineName = freshVm.getName();
+
+            logger.trace("<< converting vm (" + virtualMachineName + ") to NodeMetadata");
 
             VirtualMachinePowerState vmState = freshVm.getRuntime().getPowerState();
             NodeMetadata.Status nodeState = toPortableNodeStatus.get(vmState);
@@ -160,7 +164,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
             Set<String> ipv4Addresses = newHashSet();
             Set<String> ipv6Addresses = newHashSet();
 
-            if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate()) {
+            if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate() && VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsOk).apply(freshVm)) {
                Predicates2.retry(new Predicate<VirtualMachine>() {
                   @Override
                   public boolean apply(VirtualMachine vm) {
@@ -170,13 +174,14 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                         return false;
                      }
                   }
-               }, 60 * 1000 * 10, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
+               }, 60 * 1000, 10 * 1000, TimeUnit.MILLISECONDS).apply(freshVm);
             }
 
 
             if (VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsNotInstalled).apply(freshVm))
                logger.trace("<< No VMware tools installed ( " + virtualMachineName + " )");
             else if (nodeState == Status.RUNNING && not(VSpherePredicate.isTemplatePredicate).apply(freshVm)) {
+               int retries = 0;
                while (ipv4Addresses.size() < 1) {
                   ipv4Addresses.clear();
                   ipv6Addresses.clear();
@@ -197,11 +202,15 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                         }
                      }
                   }
-                  if (ipv4Addresses.size() < 1) {
+                  if (ipv4Addresses.size() < 1 && null != nics) {
                      //nicConfigurationRecovery(instance, freshVm);
-                     logger.error("<< cant find IPv4 address for vm: " + virtualMachineName);
+                     logger.warn("<< can't find IPv4 address for vm: " + virtualMachineName);
+                     retries++;
+                     Thread.sleep(1000);
+                  }
+                  if (ipv4Addresses.size() < 1 && retries == 10){
+                     logger.error("<< can't find IPv4 address after " + retries + " retries for vm: " + virtualMachineName);
                      break;
-                     //Thread.sleep(1000);
                   }
                }
                nodeMetadataBuilder.publicAddresses(filter(ipv4Addresses, not(isPrivateAddress)));

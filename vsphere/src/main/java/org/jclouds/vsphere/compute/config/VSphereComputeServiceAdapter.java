@@ -1,20 +1,18 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.jclouds.vsphere.compute.config;
 
@@ -32,12 +30,10 @@ import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.Description;
 import com.vmware.vim25.DistributedVirtualSwitchPortConnection;
 import com.vmware.vim25.FileTransferInformation;
-import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.GuestProcessInfo;
 import com.vmware.vim25.GuestProgramSpec;
 import com.vmware.vim25.NamePasswordAuthentication;
 import com.vmware.vim25.ParaVirtualSCSIController;
-import com.vmware.vim25.TaskInProgress;
 import com.vmware.vim25.VirtualCdrom;
 import com.vmware.vim25.VirtualCdromIsoBackingInfo;
 import com.vmware.vim25.VirtualDevice;
@@ -67,7 +63,6 @@ import com.vmware.vim25.mo.GuestAuthManager;
 import com.vmware.vim25.mo.GuestFileManager;
 import com.vmware.vim25.mo.GuestOperationsManager;
 import com.vmware.vim25.mo.GuestProcessManager;
-import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.ManagedEntity;
 import com.vmware.vim25.mo.ResourcePool;
@@ -177,7 +172,6 @@ public class VSphereComputeServiceAdapter implements
                     VSphereApiMetadata.defaultProperties().getProperty(CLONING), name, vOptions.postConfiguration()).apply(master);
 
 
-
             Set<String> networks = vOptions.getNetworks();
 
             VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
@@ -209,7 +203,6 @@ public class VSphereComputeServiceAdapter implements
                   numberOfHardDrives++;
                }
             }
-
 
             for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
                if (device instanceof VirtualEthernetCard) {
@@ -259,7 +252,7 @@ public class VSphereComputeServiceAdapter implements
                   //int unitNumber = master.getConfig().getHardware().getDevice().length;
                   int unitNumber = numberOfHardDrives;
                   List<? extends Volume> volumes = template.getHardware().getVolumes();
-                  VirtualDevice controller = (VirtualDevice)device;
+                  VirtualDevice controller = (VirtualDevice) device;
                   String dsName = vSphereHost.get().getDatastore().getName();
                   for (Volume volume : volumes) {
 
@@ -319,7 +312,7 @@ public class VSphereComputeServiceAdapter implements
 
             VirtualMachine cloned = null;
             try {
-               cloned = cloneMaster(master, tag, name, cloneSpec , vOptions.vmFolder());
+               cloned = cloneMaster(master, tag, name, cloneSpec, vOptions.vmFolder());
                Set<String> tagsFromOption = vOptions.getTags();
                if (tagsFromOption.size() > 0) {
                   StringBuilder tags = new StringBuilder();
@@ -622,15 +615,15 @@ public class VSphereComputeServiceAdapter implements
          Task task = master.cloneVM_Task(folder, name, cloneSpec);
          String result = task.waitForTask();
          if (result.equals(Task.SUCCESS)) {
-               while (cloned == null) {
-                  logger.trace("<< after clone search for VM with name: " + name);
-                  cloned = getVM(name, folder);
-                  if (cloned == null)
-                     folder = serviceInstance.get().getInstance().getRootFolder();
-                  else
-                     break;
-                  sleep(500);
-               }
+            while (cloned == null) {
+               logger.trace("<< after clone search for VM with name: " + name);
+               cloned = getVM(name, folder);
+               if (cloned == null)
+                  folder = serviceInstance.get().getInstance().getRootFolder();
+               else
+                  break;
+               sleep(500);
+            }
          } else {
             String errorMessage = task.getTaskInfo().getError().getLocalizedMessage();
             logger.error(errorMessage);
@@ -706,19 +699,19 @@ public class VSphereComputeServiceAdapter implements
             nic = new VirtualPCNet32();
 
          VirtualDeviceBackingInfo nicBacking = null;
-         if (distributedSwitch){
+         if (distributedSwitch) {
 
             DistributedVirtualPortgroup virtualPortgroup = distributedVirtualPortgroupFunction.apply(net.getNetworkName());
 
-            nicBacking = new  VirtualEthernetCardDistributedVirtualPortBackingInfo();
+            nicBacking = new VirtualEthernetCardDistributedVirtualPortBackingInfo();
             DistributedVirtualSwitchPortConnection port = new DistributedVirtualSwitchPortConnection();
             port.setPortgroupKey(virtualPortgroup.getKey());
-            DistributedVirtualSwitch distributedVirtualSwitch =  new DistributedVirtualSwitch( this.serviceInstance.get().getInstance().getServerConnection() ,virtualPortgroup.getConfig().getDistributedVirtualSwitch());
+            DistributedVirtualSwitch distributedVirtualSwitch = new DistributedVirtualSwitch(this.serviceInstance.get().getInstance().getServerConnection(), virtualPortgroup.getConfig().getDistributedVirtualSwitch());
             port.setSwitchUuid(distributedVirtualSwitch.getUuid());
-            ((VirtualEthernetCardDistributedVirtualPortBackingInfo)nicBacking).setPort(port);
+            ((VirtualEthernetCardDistributedVirtualPortBackingInfo) nicBacking).setPort(port);
          } else {
             nicBacking = new VirtualEthernetCardNetworkBackingInfo();
-            ((VirtualEthernetCardNetworkBackingInfo)nicBacking).setDeviceName(net.getNetworkName());
+            ((VirtualEthernetCardNetworkBackingInfo) nicBacking).setDeviceName(net.getNetworkName());
             Description info = new Description();
             info.setLabel(net.getNicName());
             info.setLabel("" + i);
@@ -743,45 +736,45 @@ public class VSphereComputeServiceAdapter implements
       return nics;
    }
 
-   private void markVirtualMachineAsTemplate(VirtualMachine vm) throws RemoteException {
-
-      lock.lock();
-      try {
-         if (!vm.getConfig().isTemplate())
-            vm.markAsTemplate();
-      } finally {
-         lock.unlock();
-      }
-   }
-
-
-   private void markTemplateAsVirtualMachine(VirtualMachine master, ResourcePool resourcePool, HostSystem host)
-           throws RemoteException, TaskInProgress, InterruptedException {
-      lock.lock();
-      try {
-         if (master.getConfig().isTemplate())
-            master.markAsVirtualMachine(resourcePool, host);
-      } finally {
-         lock.unlock();
-      }
-   }
-
-
-   private GuestNicInfo[] getGuestNicInfo(VirtualMachine virtualMachine) {
-      GuestNicInfo[] nics = virtualMachine.getGuest().getNet();
-      if (nics == null) {
-         VSpherePredicate.WAIT_FOR_NIC(1000 * 60 * 5, TimeUnit.MILLISECONDS).apply(virtualMachine);
-         nics = virtualMachine.getGuest().getNet();
-      }
-      return nics;
-   }
-
-   private String getBOOTPROTO(String type) {
-      if ("generated".equals(type))
-         return "dhcp";
-      else
-         return "none";
-   }
+//   private void markVirtualMachineAsTemplate(VirtualMachine vm) throws RemoteException {
+//
+//      lock.lock();
+//      try {
+//         if (!vm.getConfig().isTemplate())
+//            vm.markAsTemplate();
+//      } finally {
+//         lock.unlock();
+//      }
+//   }
+//
+//
+//   private void markTemplateAsVirtualMachine(VirtualMachine master, ResourcePool resourcePool, HostSystem host)
+//           throws RemoteException, TaskInProgress, InterruptedException {
+//      lock.lock();
+//      try {
+//         if (master.getConfig().isTemplate())
+//            master.markAsVirtualMachine(resourcePool, host);
+//      } finally {
+//         lock.unlock();
+//      }
+//   }
+//
+//
+//   private GuestNicInfo[] getGuestNicInfo(VirtualMachine virtualMachine) {
+//      GuestNicInfo[] nics = virtualMachine.getGuest().getNet();
+//      if (nics == null) {
+//         VSpherePredicate.WAIT_FOR_NIC(1000 * 60 * 5, TimeUnit.MILLISECONDS).apply(virtualMachine);
+//         nics = virtualMachine.getGuest().getNet();
+//      }
+//      return nics;
+//   }
+//
+//   private String getBOOTPROTO(String type) {
+//      if ("generated".equals(type))
+//         return "dhcp";
+//      else
+//         return "none";
+//   }
 
    private void waitForPort(VirtualMachine vm, int port, long timeout) {
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
@@ -828,54 +821,20 @@ public class VSphereComputeServiceAdapter implements
       GuestProgramSpec gps = new GuestProgramSpec();
       gps.programPath = "/bin/sh";
 
-     // StringBuilder ethScript = new StringBuilder("rm -f /etc/sysconfig/network-scripts/ifcfg-eth*;");
       StringBuilder ethScript = new StringBuilder();
 
-      int index = 0;
-      for (NetworkConfig config : networkConfigs) {
-//         ethScript.append("echo 'DEVICE=eth" + index);
-//         ethScript.append("\nTYPE=Ethernet");
-//         ethScript.append("\nONBOOT=yes");
-//         ethScript.append("\nNM_CONTROLLED=yes");
-//         ethScript.append("\nBOOTPROTO=" + getBOOTPROTO(config.getAddressType()) + "' > /etc/sysconfig/network-scripts/ifcfg-eth" + index + ";");
-         index++;
-      }
-
-      //ethScript.append("sed -i \"/HOSTNAME/d\" /etc/sysconfig/network;");
-      //ethScript.append("echo \"HOSTNAME=" + name + "\" >> /etc/sysconfig/network;");
-      //ethScript.append("hostname " + name + ";");
-
-
-//      ethScript.append("\necho 'fdisk /dev/sdb <<EOF");
-//      ethScript.append("\np");
-//      ethScript.append("\nn");
-//      ethScript.append("\np");
-//      ethScript.append("\n1");
-//      ethScript.append("\n");
-//      ethScript.append("\n");
-//      ethScript.append("\nt");
-//      ethScript.append("\n8e");
-//      ethScript.append("\nw");
-//      ethScript.append("\nEOF' > /tmp/fdisk.sh;");
-//      ethScript.append("\nchmod 0700 /tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
-//      ethScript.append("\n/tmp/fdisk.sh >> /tmp/jclouds-init.log 2>&1;");
-//
-//      ethScript.append("\npvcreate /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
-//      ethScript.append("\nvgextend VolGroup /dev/sdb1 >> /tmp/jclouds-init.log 2>&1;");
-//
-//      ethScript.append("\nvgdisplay VolGroup >> /tmp/volgroup 2>&1;");
-//
-//      ethScript.append("\nawk 'BEGIN { free=0; alloc=0; } /Alloc/ { alloc=\\$7 } /Free/ { free=\\$7 } END { print \\\"-L+\\\" free - alloc \\\"G\\\" }' /tmp/volgroup | xargs lvextend /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
-//      ethScript.append("\nresize2fs /dev/VolGroup/lv_root >> /tmp/jclouds-init.log 2>&1;");
-
-      ethScript.append("\n[ -f /etc/resolv.conf ] && grep nameserver /etc/resolv.conf | awk '{ if(length($2) > 0) system(\"ping -c 4 \" $2) | getline D; }';");
+      ethScript.append("\necho \\\"#!/bin/bash\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"c=1\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"while [ \\\\\\$c -le 12 ]; do\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"[ -f /etc/resolv.conf ] && break\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"(( c++ ))\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"sleep 5\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"done\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\necho \\\"[ -f /etc/resolv.conf ] && grep nameserver /etc/resolv.conf | awk '{ if(length(\\\\\\$2) > 0) system(\\\\\\\"ping -c 4 \\\\\\\" \\\\\\$2); }' > /tmp/ping-results.log 2>&1\\\" >> /tmp/ping_dns.sh;");
+      ethScript.append("\nchmod +x /tmp/ping_dns.sh;");
+      ethScript.append("\n/tmp/ping_dns.sh;");
       ethScript.append("\nmkdir -p ~/.ssh;");
       ethScript.append("\nrestorecon -FRvv ~/.ssh;");
-
-//      ethScript.append("\nservice network reload;");
-
-//      ethScript.append("\nrm -f /tmp/fdisk.sh;");
-//      ethScript.append("\nrm -f /tmp/volgroup;");
 
       gps.arguments = "-c \"" + ethScript.toString() + "\"";
 
@@ -906,8 +865,6 @@ public class VSphereComputeServiceAdapter implements
          }
          logger.trace("<< process pid : " + pid);
       } catch (Exception e) {
-         //logger.warn(e.getMessage(), e);
-         //Throwables.propagate(e);
       }
 
    }
