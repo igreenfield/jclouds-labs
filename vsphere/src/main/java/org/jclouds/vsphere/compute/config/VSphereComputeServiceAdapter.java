@@ -17,6 +17,7 @@
 package org.jclouds.vsphere.compute.config;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -70,12 +71,9 @@ import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.compute.ComputeServiceAdapter;
 import org.jclouds.compute.domain.Hardware;
-import org.jclouds.compute.domain.HardwareBuilder;
 import org.jclouds.compute.domain.Image;
-import org.jclouds.compute.domain.Processor;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.Volume;
-import org.jclouds.compute.domain.VolumeBuilder;
 import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
@@ -83,8 +81,9 @@ import org.jclouds.logging.Logger;
 import org.jclouds.vsphere.VSphereApiMetadata;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.compute.strategy.NetworkConfigurationForNetworkAndOptions;
+import org.jclouds.vsphere.compute.util.ListsUtils;
 import org.jclouds.vsphere.config.VSphereConstants;
-import org.jclouds.vsphere.domain.InstanceType;
+import org.jclouds.vsphere.domain.HardwareProfiles;
 import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.domain.network.NetworkConfig;
@@ -100,7 +99,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,7 +113,6 @@ import static com.google.common.base.Throwables.propagate;
 import static org.jclouds.vsphere.config.VSphereConstants.CLONING;
 
 /**
- * based on Andrea Turli work.
  */
 @Singleton
 public class VSphereComputeServiceAdapter implements
@@ -151,208 +151,185 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public NodeAndInitialCredentials<VirtualMachine> createNodeWithGroupEncodedIntoName(String tag, String name, Template template) {
-      try {
-         Closer closer = Closer.create();
-         VSphereServiceInstance instance = null;
-         try {
-            instance = this.serviceInstance.get();
-            VSphereHost sphereHost = vSphereHost.get();
-            closer.register(instance);
-            closer.register(sphereHost);
-            Folder rootFolder = instance.getInstance().getRootFolder();
 
-            ComputerNameValidator.INSTANCE.validate(name);
+      try (VSphereServiceInstance instance = this.serviceInstance.get();
+           VSphereHost sphereHost = vSphereHost.get();) {
+         Folder rootFolder = instance.getInstance().getRootFolder();
 
-            VirtualMachine master = getVMwareTemplate(template.getImage().getId(), rootFolder);
-            ResourcePool resourcePool = checkNotNull(tryFindResourcePool(rootFolder, sphereHost.getHost().getName()), "resourcePool");
+         ComputerNameValidator.INSTANCE.validate(name);
 
-            VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+         VirtualMachine master = getVMwareTemplate(template.getImage().getId(), rootFolder);
+         ResourcePool resourcePool = checkNotNull(tryFindResourcePool(rootFolder, sphereHost.getHost().getName()).orNull(), "resourcePool");
 
-            VirtualMachineCloneSpec cloneSpec = new MasterToVirtualMachineCloneSpec(resourcePool, sphereHost.getDatastore(),
-                    VSphereApiMetadata.defaultProperties().getProperty(CLONING), name, vOptions.postConfiguration()).apply(master);
+         VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+
+         VirtualMachineCloneSpec cloneSpec = new MasterToVirtualMachineCloneSpec(resourcePool, sphereHost.getDatastore(),
+                 VSphereApiMetadata.defaultProperties().getProperty(CLONING), name, vOptions.postConfiguration()).apply(master);
 
 
-            Set<String> networks = vOptions.getNetworks();
+         Set<String> networks = vOptions.getNetworks();
 
-            VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
-            virtualMachineConfigSpec.setMemoryMB((long) template.getHardware().getRam());
-            if (template.getHardware().getProcessors().size() > 0)
-               virtualMachineConfigSpec.setNumCPUs((int) template.getHardware().getProcessors().get(0).getCores());
-            else
-               virtualMachineConfigSpec.setNumCPUs(1);
-
-
-            Set<NetworkConfig> networkConfigs = Sets.newHashSet();
-            for (String network : networks) {
-               NetworkConfig config = networkConfigurationForNetworkAndOptions.apply(network, vOptions);
-               networkConfigs.add(config);
-            }
-
-            List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
-
-            long currentDiskSize = 0;
-            int numberOfHardDrives = 0;
-
-            int diskKey = 0;
-
-            for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
-               if (device instanceof VirtualDisk) {
-                  VirtualDisk vd = (VirtualDisk) device;
-                  diskKey = vd.getKey();
-                  currentDiskSize += vd.getCapacityInKB();
-                  numberOfHardDrives++;
-               }
-            }
-
-            for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
-               if (device instanceof VirtualEthernetCard) {
-                  VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
-                  nicSpec.setOperation(VirtualDeviceConfigSpecOperation.remove);
-                  nicSpec.setDevice(device);
-                  updates.add(nicSpec);
-               } else if (device instanceof VirtualCdrom) {
-                  if (vOptions.isoFileName() != null) {
-                     VirtualCdrom vCdrom = (VirtualCdrom) device;
-                     VirtualDeviceConfigSpec cdSpec = new VirtualDeviceConfigSpec();
-                     cdSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
-
-                     VirtualCdromIsoBackingInfo iso = new VirtualCdromIsoBackingInfo();
-                     Datastore datastore = vSphereHost.get().getDatastore();
-                     VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
-                     cInfo.setStartConnected(true);
-                     cInfo.setConnected(true);
-                     iso.setDatastore(datastore.getMOR());
-                     iso.setFileName("[" + datastore.getName() + "] " + vOptions.isoFileName());
-
-                     vCdrom.setConnectable(cInfo);
-                     vCdrom.setBacking(iso);
-                     cdSpec.setDevice(vCdrom);
-                     updates.add(cdSpec);
-                  }
-               } else if (device instanceof VirtualFloppy) {
-                  if (vOptions.flpFileName() != null) {
-                     VirtualFloppy vFloppy = (VirtualFloppy) device;
-                     VirtualDeviceConfigSpec floppySpec = new VirtualDeviceConfigSpec();
-                     floppySpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
-
-                     VirtualFloppyImageBackingInfo image = new VirtualFloppyImageBackingInfo();
-                     Datastore datastore = vSphereHost.get().getDatastore();
-                     VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
-                     cInfo.setStartConnected(true);
-                     cInfo.setConnected(true);
-                     image.setDatastore(datastore.getMOR());
-                     image.setFileName("[" + datastore.getName() + "] " + vOptions.flpFileName());
-
-                     vFloppy.setConnectable(cInfo);
-                     vFloppy.setBacking(image);
-                     floppySpec.setDevice(vFloppy);
-                     updates.add(floppySpec);
-                  }
-               } else if (device instanceof VirtualLsiLogicController || device instanceof ParaVirtualSCSIController) {
-                  //int unitNumber = master.getConfig().getHardware().getDevice().length;
-                  int unitNumber = numberOfHardDrives;
-                  List<? extends Volume> volumes = template.getHardware().getVolumes();
-                  VirtualDevice controller = (VirtualDevice) device;
-                  String dsName = vSphereHost.get().getDatastore().getName();
-                  for (Volume volume : volumes) {
-
-                     long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
-
-                     if (currentVolumeSize <= currentDiskSize)
-                        continue;
-
-                     VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
-
-                     VirtualDisk disk = new VirtualDisk();
-                     VirtualDiskFlatVer2BackingInfo diskFileBacking = new VirtualDiskFlatVer2BackingInfo();
+         VirtualMachineConfigSpec virtualMachineConfigSpec = new VirtualMachineConfigSpec();
+         virtualMachineConfigSpec.setMemoryMB((long) template.getHardware().getRam());
+         if (template.getHardware().getProcessors().size() > 0)
+            virtualMachineConfigSpec.setNumCPUs((int) template.getHardware().getProcessors().get(0).getCores());
+         else
+            virtualMachineConfigSpec.setNumCPUs(1);
 
 
-                     int ckey = controller.getKey();
-                     unitNumber++;
-
-                     String fileName = "[" + dsName + "] " + name + "/" + name + unitNumber + ".vmdk";
-
-                     diskFileBacking.setFileName(fileName);
-                     diskFileBacking.setDiskMode("persistent");
-                     diskFileBacking.setThinProvisioned(true);
-
-                     disk.setControllerKey(ckey);
-                     disk.setUnitNumber(unitNumber);
-                     disk.setBacking(diskFileBacking);
-                     long size = currentVolumeSize - currentDiskSize;
-                     logger.trace("<< adding disk size: " + size + "KB");
-                     disk.setCapacityInKB(size);
-                     disk.setKey(-1);
-
-                     diskSpec.setOperation(VirtualDeviceConfigSpecOperation.add);
-                     diskSpec.setFileOperation(VirtualDeviceConfigSpecFileOperation.create);
-                     diskSpec.setDevice(disk);
-                     updates.add(diskSpec);
-                  }
-
-               }
-            }
-            updates.addAll(createNicSpec(networkConfigs, vOptions.postConfiguration(), vOptions.distributedVirtualSwitch()));
-            virtualMachineConfigSpec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
-
-//                VirtualMachineBootOptions bootOptions = new VirtualMachineBootOptions();
-//                List<VirtualMachineBootOptionsBootableDevice> bootOrder = Lists.newArrayList();
-//
-//                VirtualMachineBootOptionsBootableDiskDevice diskBootDevice = new VirtualMachineBootOptionsBootableDiskDevice();
-//                diskBootDevice.setDeviceKey(diskKey);
-//                bootOrder.add(diskBootDevice);
-//                bootOrder.add(new VirtualMachineBootOptionsBootableCdromDevice());
-//                bootOptions.setBootOrder(bootOrder.toArray(new VirtualMachineBootOptionsBootableDevice[0]));
-//
-//                virtualMachineConfigSpec.setBootOptions(bootOptions);
-
-            cloneSpec.setConfig(virtualMachineConfigSpec);
-
-            vOptions.getPublicKey();
-
-            VirtualMachine cloned = null;
-            try {
-               cloned = cloneMaster(master, tag, name, cloneSpec, vOptions.vmFolder());
-               Set<String> tagsFromOption = vOptions.getTags();
-               if (tagsFromOption.size() > 0) {
-                  StringBuilder tags = new StringBuilder();
-                  for (String vmTag : vOptions.getTags()) {
-                     tags.append(vmTag).append(",");
-                  }
-                  tags.deleteCharAt(tags.length() - 1);
-
-                  cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_TAGS).getKey(), tags.toString());
-                  cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_GROUP).getKey(), tag);
-                  if (vOptions.postConfiguration())
-                     postConfiguration(cloned, name, tag, networkConfigs);
-                  else {
-                     VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 60 * 60 * 2, TimeUnit.MILLISECONDS).apply(cloned);
-                  }
-               }
-            } catch (Exception e) {
-               logger.error("Can't clone vm " + master.getName() + ", Error message: " + e.toString(), e);
-               propagate(e);
-            }
-
-            if (vOptions.waitOnPort() != null) {
-
-            }
-
-
-            NodeAndInitialCredentials<VirtualMachine> nodeAndInitialCredentials = new NodeAndInitialCredentials<VirtualMachine>(cloned, cloned.getName(),
-                    LoginCredentials.builder().user("root")
-                            .password(vmInitPassword)
-                            .build());
-            return nodeAndInitialCredentials;
-         } catch (Throwable e) { // must catch Throwable
-            throw closer.rethrow(e);
-         } finally {
-            closer.close();
+         Set<NetworkConfig> networkConfigs = Sets.newHashSet();
+         for (String network : networks) {
+            NetworkConfig config = networkConfigurationForNetworkAndOptions.apply(network, vOptions);
+            networkConfigs.add(config);
          }
+
+
+         List<VirtualDeviceConfigSpec> updates = configureVmHardware(name, template, master, vOptions, networkConfigs);
+         virtualMachineConfigSpec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+
+         cloneSpec.setConfig(virtualMachineConfigSpec);
+
+         vOptions.getPublicKey();
+
+         VirtualMachine cloned = null;
+         try {
+            cloned = cloneMaster(master, tag, name, cloneSpec, vOptions.vmFolder());
+            Set<String> tagsFromOption = vOptions.getTags();
+            if (tagsFromOption.size() > 0) {
+               String tags = Joiner.on(",").join(vOptions.getTags());
+               cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_TAGS).getKey(), tags);
+               cloned.getServerConnection().getServiceInstance().getCustomFieldsManager().setField(cloned, customFields.get().get(VSphereConstants.JCLOUDS_GROUP).getKey(), tag);
+               if (vOptions.postConfiguration())
+                  postConfiguration(cloned, name, tag, networkConfigs);
+               else {
+                  VSpherePredicate.WAIT_FOR_VMTOOLS(1000 * 60 * 60 * 2, TimeUnit.MILLISECONDS).apply(cloned);
+               }
+            }
+         } catch (Exception e) {
+            logger.error("Can't clone vm " + master.getName() + ", Error message: " + e.toString(), e);
+            propagate(e);
+         }
+
+         NodeAndInitialCredentials<VirtualMachine> nodeAndInitialCredentials = new NodeAndInitialCredentials<VirtualMachine>(cloned, cloned.getName(),
+                 LoginCredentials.builder().user("root")
+                         .password(vmInitPassword)
+                         .build());
+         return nodeAndInitialCredentials;
       } catch (Throwable t) {
          Throwables.propagateIfPossible(t);
       }
       return null;
+   }
+
+   private List<VirtualDeviceConfigSpec> configureVmHardware(String name, Template template, VirtualMachine master, VSphereTemplateOptions vOptions, Set<NetworkConfig> networkConfigs) {
+      List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
+      long currentDiskSize = 0;
+      int numberOfHardDrives = 0;
+
+      int diskKey = 0;
+
+      for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
+         if (device instanceof VirtualDisk) {
+            VirtualDisk vd = (VirtualDisk) device;
+            diskKey = vd.getKey();
+            currentDiskSize += vd.getCapacityInKB();
+            numberOfHardDrives++;
+            break;
+         }
+      }
+
+      for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
+
+         if (device instanceof VirtualEthernetCard) {
+            VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
+            nicSpec.setOperation(VirtualDeviceConfigSpecOperation.remove);
+            nicSpec.setDevice(device);
+            updates.add(nicSpec);
+         } else if (device instanceof VirtualCdrom) {
+            if (vOptions.isoFileName() != null) {
+               VirtualCdrom vCdrom = (VirtualCdrom) device;
+               VirtualDeviceConfigSpec cdSpec = new VirtualDeviceConfigSpec();
+               cdSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+
+               VirtualCdromIsoBackingInfo iso = new VirtualCdromIsoBackingInfo();
+               Datastore datastore = vSphereHost.get().getDatastore();
+               VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
+               cInfo.setStartConnected(true);
+               cInfo.setConnected(true);
+               iso.setDatastore(datastore.getMOR());
+               iso.setFileName("[" + datastore.getName() + "] " + vOptions.isoFileName());
+
+               vCdrom.setConnectable(cInfo);
+               vCdrom.setBacking(iso);
+               cdSpec.setDevice(vCdrom);
+               updates.add(cdSpec);
+            }
+         } else if (device instanceof VirtualFloppy) {
+            if (vOptions.flpFileName() != null) {
+               VirtualFloppy vFloppy = (VirtualFloppy) device;
+               VirtualDeviceConfigSpec floppySpec = new VirtualDeviceConfigSpec();
+               floppySpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+
+               VirtualFloppyImageBackingInfo image = new VirtualFloppyImageBackingInfo();
+               Datastore datastore = vSphereHost.get().getDatastore();
+               VirtualDeviceConnectInfo cInfo = new VirtualDeviceConnectInfo();
+               cInfo.setStartConnected(true);
+               cInfo.setConnected(true);
+               image.setDatastore(datastore.getMOR());
+               image.setFileName("[" + datastore.getName() + "] " + vOptions.flpFileName());
+
+               vFloppy.setConnectable(cInfo);
+               vFloppy.setBacking(image);
+               floppySpec.setDevice(vFloppy);
+               updates.add(floppySpec);
+            }
+         } else if (device instanceof VirtualLsiLogicController || device instanceof ParaVirtualSCSIController) {
+            //int unitNumber = master.getConfig().getHardware().getDevice().length;
+            int unitNumber = numberOfHardDrives;
+            List<? extends Volume> volumes = template.getHardware().getVolumes();
+            VirtualDevice controller = (VirtualDevice) device;
+            String dsName = vSphereHost.get().getDatastore().getName();
+            for (Volume volume : volumes) {
+
+               long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
+
+               if (currentVolumeSize <= currentDiskSize)
+                  continue;
+
+               VirtualDeviceConfigSpec diskSpec = new VirtualDeviceConfigSpec();
+
+               VirtualDisk disk = new VirtualDisk();
+               VirtualDiskFlatVer2BackingInfo diskFileBacking = new VirtualDiskFlatVer2BackingInfo();
+
+
+               int ckey = controller.getKey();
+               unitNumber++;
+
+               String fileName = "[" + dsName + "] " + name + "/" + name + unitNumber + ".vmdk";
+
+               diskFileBacking.setFileName(fileName);
+               diskFileBacking.setDiskMode("persistent");
+               diskFileBacking.setThinProvisioned(true);
+
+               disk.setControllerKey(ckey);
+               disk.setUnitNumber(unitNumber);
+               disk.setBacking(diskFileBacking);
+               long size = currentVolumeSize - currentDiskSize;
+               logger.trace("<< adding disk size: " + size + "KB");
+               disk.setCapacityInKB(size);
+               disk.setKey(-1);
+
+               diskSpec.setOperation(VirtualDeviceConfigSpecOperation.add);
+               diskSpec.setFileOperation(VirtualDeviceConfigSpecFileOperation.create);
+               diskSpec.setDevice(disk);
+               updates.add(diskSpec);
+            }
+
+         }
+      }
+      updates.addAll(createNicSpec(networkConfigs, vOptions.postConfiguration(), vOptions.distributedVirtualSwitch()));
+
+      return updates;
    }
 
    private Iterable<VirtualMachine> listNodes(VSphereServiceInstance instance) {
@@ -373,113 +350,77 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public Iterable<VirtualMachine> listNodes() {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-
-      try {
-         try {
-            return listNodes(instance);
-         } catch (Throwable e) {
-            logger.error("Can't find vm", e);
-            throw closer.rethrow(e);
-         } finally {
-            closer.close();
-         }
-      } catch (Throwable t) {
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         return listNodes(instance);
+      } catch (Throwable e) {
+         logger.error("Can't find vm", e);
+         Throwables.propagateIfPossible(e);
          return ImmutableSet.of();
       }
    }
 
    @Override
    public Iterable<VirtualMachine> listNodesByIds(Iterable<String> ids) {
-      Iterable<VirtualMachine> nodes = listNodes();
-      Iterable<VirtualMachine> selectedNodes = Iterables.filter(nodes, VSpherePredicate.isNodeIdInList(ids));
-      return selectedNodes;
+
+      Iterable<VirtualMachine> vms = ImmutableSet.of();
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         Folder nodesFolder = instance.getInstance().getRootFolder();
+         List<List<String>> list = new ArrayList<List<String>>();
+         Iterator<String> idsIterator = ids.iterator();
+
+         while (idsIterator.hasNext()) {
+            list.add(Lists.newArrayList("VirtualMachine", idsIterator.next()));
+         }
+
+         String[][] typeInfo = ListsUtils.ListToArray(list);
+
+         ManagedEntity[] managedEntities = new InventoryNavigator(nodesFolder).searchManagedEntities(
+                 typeInfo, true);
+         vms = Iterables.transform(Arrays.asList(managedEntities), new Function<ManagedEntity, VirtualMachine>() {
+            public VirtualMachine apply(ManagedEntity input) {
+               return (VirtualMachine) input;
+            }
+         });
+      } catch (Throwable e) {
+         logger.error("Can't find vms ", e);
+      }
+      return vms;
+
+
+//      Iterable<VirtualMachine> nodes = listNodes();
+//      Iterable<VirtualMachine> selectedNodes = Iterables.filter(nodes, VSpherePredicate.isNodeIdInList(ids));
+//      return selectedNodes;
    }
+
+
 
    @Override
    public Iterable<Hardware> listHardwareProfiles() {
       Set<org.jclouds.compute.domain.Hardware> hardware = Sets.newLinkedHashSet();
-      hardware.add(new HardwareBuilder().ids(InstanceType.C1_M1_D10).hypervisor("vSphere").name(InstanceType.C1_M1_D10)
-              .processor(new Processor(1, 1.0))
-              .ram(1024)
-              .volume(new VolumeBuilder().size(20f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C2_M2_D30).hypervisor("vSphere").name(InstanceType.C2_M2_D30)
-              .processor(new Processor(2, 1.0))
-              .ram(2048)
-              .volume(new VolumeBuilder().size(30f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C2_M2_D50).hypervisor("vSphere").name(InstanceType.C2_M2_D50)
-              .processor(new Processor(2, 1.0))
-              .ram(2048)
-              .volume(new VolumeBuilder().size(50f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C2_M4_D50).hypervisor("vSphere").name(InstanceType.C2_M4_D50)
-              .processor(new Processor(2, 2.0))
-              .ram(4096)
-              .volume(new VolumeBuilder().size(50f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C2_M10_D80).hypervisor("vSphere").name(InstanceType.C2_M10_D80)
-              .processor(new Processor(2, 2.0))
-              .ram(10240)
-              .volume(new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C3_M10_D80).hypervisor("vSphere").name(InstanceType.C3_M10_D80)
-              .processor(new Processor(3, 2.0))
-              .ram(10240)
-              .volume(new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C4_M4_D20).hypervisor("vSphere").name(InstanceType.C4_M4_D20)
-              .processor(new Processor(4, 2.0))
-              .ram(4096)
-              .volume(new VolumeBuilder().size(20f).type(Volume.Type.LOCAL).build())
-              .build());
-
-      hardware.add(new HardwareBuilder().ids(InstanceType.C2_M6_D40).hypervisor("vSphere").name(InstanceType.C2_M6_D40)
-              .processor(new Processor(2, 2.0))
-              .ram(6 * 1024)
-              .volume(new VolumeBuilder().size(40f).type(Volume.Type.LOCAL).build())
-              .build());
-      hardware.add(new HardwareBuilder().ids(InstanceType.C8_M16_D30).hypervisor("vSphere").name(InstanceType.C8_M16_D30)
-              .processor(new Processor(8, 2.0))
-              .ram(16 * 1024)
-              .volume(new VolumeBuilder().size(30f).type(Volume.Type.LOCAL).build())
-              .build());
-      hardware.add(new HardwareBuilder().ids(InstanceType.C8_M16_D80).hypervisor("vSphere").name(InstanceType.C8_M16_D80)
-              .processor(new Processor(8, 2.0))
-              .ram(16 * 1024)
-              .volume(new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build())
-              .build());
+      hardware.add(HardwareProfiles.C1_M1_D10.getHardware());
+      hardware.add(HardwareProfiles.C2_M2_D30.getHardware());
+      hardware.add(HardwareProfiles.C2_M2_D50.getHardware());
+      hardware.add(HardwareProfiles.C2_M4_D50.getHardware());
+      hardware.add(HardwareProfiles.C2_M10_D80.getHardware());
+      hardware.add(HardwareProfiles.C3_M10_D80.getHardware());
+      hardware.add(HardwareProfiles.C4_M4_D20.getHardware());
+      hardware.add(HardwareProfiles.C2_M6_D40.getHardware());
+      hardware.add(HardwareProfiles.C8_M16_D30.getHardware());
+      hardware.add(HardwareProfiles.C8_M16_D80.getHardware());
 
       return hardware;
    }
 
    @Override
    public Iterable<Image> listImages() {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
-            Iterable<VirtualMachine> nodes = listNodes(instance);
-            Iterable<VirtualMachine> templates = Iterables.filter(nodes, VSpherePredicate.isTemplatePredicate);
-            Iterable<Image> images = Iterables.transform(templates, virtualMachineToImage);
-            return FluentIterable.from(images).toList();
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         Iterable<VirtualMachine> nodes = listNodes(instance);
+         Iterable<VirtualMachine> templates = Iterables.filter(nodes, VSpherePredicate.isTemplatePredicate);
+         Iterable<Image> images = Iterables.transform(templates, virtualMachineToImage);
+         return FluentIterable.from(images).toList();
 
-         } catch (Throwable t) {
-            throw closer.rethrow(t);
-         } finally {
-            closer.close();
-         }
       } catch (Throwable t) {
+         Throwables.propagateIfPossible(t);
          return ImmutableSet.of();
       }
    }
@@ -492,18 +433,9 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public VirtualMachine getNode(String vmName) {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
-            return getVM(vmName, instance.getInstance().getRootFolder());
-         } catch (Throwable t) {
-            throw closer.rethrow(t);
-         } finally {
-            closer.close();
-         }
-      } catch (IOException e) {
+      try (VSphereServiceInstance instance = serviceInstance.get()) {
+         return getVM(vmName, instance.getInstance().getRootFolder());
+      } catch (Throwable e) {
          Throwables.propagateIfPossible(e);
       }
       return null;
@@ -589,21 +521,12 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public Image getImage(String imageName) {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
+         try (VSphereServiceInstance instance = serviceInstance.get();) {
             return virtualMachineToImage.apply(getVMwareTemplate(imageName, instance.getInstance().getRootFolder()));
          } catch (Throwable t) {
-            throw closer.rethrow(t);
-         } finally {
-            closer.close();
+            Throwables.propagateIfPossible(t);
+            return null;
          }
-      } catch (IOException e) {
-         Throwables.propagateIfPossible(e);
-      }
-      return null;
    }
 
    private VirtualMachine cloneMaster(VirtualMachine master, String tag, String name, VirtualMachineCloneSpec cloneSpec, String folderName) {
@@ -643,7 +566,7 @@ public class VSphereComputeServiceAdapter implements
       }
    }
 
-   private ResourcePool tryFindResourcePool(Folder folder, String hostname) {
+   private Optional<ResourcePool> tryFindResourcePool(Folder folder, String hostname) {
       Iterable<ResourcePool> resourcePools = ImmutableSet.<ResourcePool>of();
       try {
          ManagedEntity[] resourcePoolEntities = new InventoryNavigator(folder).searchManagedEntities("ResourcePool");
@@ -653,11 +576,11 @@ public class VSphereComputeServiceAdapter implements
             }
          });
          Optional<ResourcePool> optionalResourcePool = Iterables.tryFind(resourcePools, VSpherePredicate.isResourcePoolOf(hostname));
-         return optionalResourcePool.orNull();
+         return optionalResourcePool;
       } catch (Exception e) {
          logger.error("Problem in finding a valid resource pool", e);
       }
-      return null;
+      return Optional.absent();
    }
 
    private VirtualMachine getVM(String vmName, Folder nodesFolder) {
@@ -678,9 +601,9 @@ public class VSphereComputeServiceAdapter implements
          VirtualMachine node = getVM(imageName, rootFolder);
          if (VSpherePredicate.isTemplatePredicate.apply(node))
             image = node;
-      } catch (NullPointerException e) {
+      } catch (Exception e) {
          logger.error("cannot find an image called " + imageName, e);
-         throw e;
+         propagate(e);
       }
       return checkNotNull(image, "image");
    }
@@ -735,46 +658,6 @@ public class VSphereComputeServiceAdapter implements
       }
       return nics;
    }
-
-//   private void markVirtualMachineAsTemplate(VirtualMachine vm) throws RemoteException {
-//
-//      lock.lock();
-//      try {
-//         if (!vm.getConfig().isTemplate())
-//            vm.markAsTemplate();
-//      } finally {
-//         lock.unlock();
-//      }
-//   }
-//
-//
-//   private void markTemplateAsVirtualMachine(VirtualMachine master, ResourcePool resourcePool, HostSystem host)
-//           throws RemoteException, TaskInProgress, InterruptedException {
-//      lock.lock();
-//      try {
-//         if (master.getConfig().isTemplate())
-//            master.markAsVirtualMachine(resourcePool, host);
-//      } finally {
-//         lock.unlock();
-//      }
-//   }
-//
-//
-//   private GuestNicInfo[] getGuestNicInfo(VirtualMachine virtualMachine) {
-//      GuestNicInfo[] nics = virtualMachine.getGuest().getNet();
-//      if (nics == null) {
-//         VSpherePredicate.WAIT_FOR_NIC(1000 * 60 * 5, TimeUnit.MILLISECONDS).apply(virtualMachine);
-//         nics = virtualMachine.getGuest().getNet();
-//      }
-//      return nics;
-//   }
-//
-//   private String getBOOTPROTO(String type) {
-//      if ("generated".equals(type))
-//         return "dhcp";
-//      else
-//         return "none";
-//   }
 
    private void waitForPort(VirtualMachine vm, int port, long timeout) {
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();

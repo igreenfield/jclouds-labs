@@ -22,7 +22,6 @@ import org.jclouds.javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * based on Andrea Turli work.
  */
 public class NetworkConfig {
 

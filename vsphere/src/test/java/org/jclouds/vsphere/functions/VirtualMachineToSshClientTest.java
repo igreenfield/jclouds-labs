@@ -34,7 +34,6 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
 /**
- * Created by igreenfi on 20/07/2014.
  */
 public class VirtualMachineToSshClientTest {
    public static class StubSshClientModule extends AbstractModule {

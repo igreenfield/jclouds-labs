@@ -15,32 +15,21 @@
  * limitations under the License.
  */
 
-package org.jclouds.vsphere.domain;
+package org.jclouds.vsphere.compute.util;
 
-import com.vmware.vim25.mo.ServiceInstance;
-
-import java.io.Closeable;
-import java.io.IOException;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.List;
 
 /**
- * Wrapper class on the ServiceInstance from vSphere SDK
- * <p/>
  */
-public class VSphereServiceInstance implements Closeable {
-   private ServiceInstance instance;
-
-   public VSphereServiceInstance(ServiceInstance instance) {
-      this.instance = checkNotNull(instance, "ServiceInstance");
-   }
-
-   public ServiceInstance getInstance() {
-      return instance;
-   }
-
-   @Override
-   public void close() throws IOException {
-      instance.getServerConnection().logout();
+public class ListsUtils {
+   public static String[][] ListToArray(List<List<String>> values) {
+      String[][] results = new String[values.size()][2];
+      int index = 0;
+      for (List<String> value : values) {
+         results[index][0] = value.get(0);
+         results[index][1] = value.get(1);
+         index++;
+      }
+      return results;
    }
 }

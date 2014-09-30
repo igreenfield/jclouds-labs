@@ -27,8 +27,6 @@ import java.net.URL;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Date: 19/05/2014 9:04 AM
- * Package: org.jclouds.vsphere.internal
  */
 public class VSphereRestClient {
    public static final int CHUNKLEN = 1024 * 10 * 10 * 10;

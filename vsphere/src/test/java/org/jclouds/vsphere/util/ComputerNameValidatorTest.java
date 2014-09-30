@@ -17,7 +17,13 @@
 
 package org.jclouds.vsphere.util;
 
+import com.google.common.collect.Lists;
+import org.jclouds.vsphere.compute.util.ListsUtils;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Date: 29/06/2014 10:53 AM
@@ -37,5 +43,21 @@ public class ComputerNameValidatorTest {
 
    public void validateOKTest() {
       ComputerNameValidator.INSTANCE.validate("good-name");
+   }
+
+   public void listToArrayTest() {
+      List<List<String>> list = new ArrayList<List<String>>();
+
+      list.add(Lists.newArrayList("fff", "ddd"));
+      list.add(Lists.newArrayList("fff", "ddd1"));
+
+      String[][] expected = new String[][]{ {"fff", "ddd"}, {"fff", "ddd1"}};
+
+
+      Object[] strings = ListsUtils.ListToArray(list);
+
+      Assert.assertEquals(strings, expected, "ListsUtils.ListToArray does not work.");
+
+      //System.out.println(transformList.toArray() );
    }
 }

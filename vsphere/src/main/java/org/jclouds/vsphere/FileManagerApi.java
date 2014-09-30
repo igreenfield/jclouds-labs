@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 
 /**
- * Date: 18/05/2014 5:31 PM
- * Package: org.jclouds.vsphere
  */
 public interface FileManagerApi {
 

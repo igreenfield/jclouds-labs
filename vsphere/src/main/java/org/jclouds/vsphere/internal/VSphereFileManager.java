@@ -42,8 +42,6 @@ import java.rmi.RemoteException;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Date: 18/05/2014 6:00 PM
- * Package: org.jclouds.vsphere.internal
  */
 public class VSphereFileManager implements FileManagerApi {
    @Resource

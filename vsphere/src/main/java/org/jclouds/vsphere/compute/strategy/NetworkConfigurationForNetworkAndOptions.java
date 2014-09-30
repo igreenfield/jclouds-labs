@@ -22,7 +22,6 @@ import org.jclouds.vsphere.domain.network.NetworkConfig;
 import java.util.Set;
 
 /**
- * based on Andrea Turli work.
  */
 public class NetworkConfigurationForNetworkAndOptions {
    protected final NetworkConfig defaultNetworkConfig;

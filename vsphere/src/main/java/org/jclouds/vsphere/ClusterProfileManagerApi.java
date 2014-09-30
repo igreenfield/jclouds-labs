@@ -28,8 +28,6 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 /**
- * Date: 26/06/2014 10:23 AM
- * Package: org.jclouds.vsphere
  */
 public interface ClusterProfileManagerApi {
    List<Profile> getProfile();

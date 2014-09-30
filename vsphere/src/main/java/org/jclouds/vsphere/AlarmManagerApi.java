@@ -31,8 +31,6 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 /**
- * Date: 26/06/2014 10:26 AM
- * Package: org.jclouds.vsphere
  */
 public interface AlarmManagerApi {
    List<AlarmExpression> getDefaultExpression();

@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 /**
- * based on Andrea Turli work.
  */
 public class VSpherePredicate {
 

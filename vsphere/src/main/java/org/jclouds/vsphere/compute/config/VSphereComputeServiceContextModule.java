@@ -63,7 +63,6 @@ import java.rmi.RemoteException;
 import java.util.Map;
 
 /**
- * based on Andrea Turli work.
  */
 public class VSphereComputeServiceContextModule extends
         ComputeServiceAdapterContextModule<VirtualMachine, Hardware, Image, Location> {

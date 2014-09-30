@@ -25,7 +25,6 @@ import java.io.Closeable;
  * <p/>
  *
  * @see <a href="https://communities.vmware.com/community/vmtn/developer/forums/vspherewebsdk" />
- * based on Andrea Turli work.
  */
 public interface VSphereApi extends Closeable {
    @Delegate
