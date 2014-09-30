@@ -27,7 +27,7 @@ import org.jclouds.compute.domain.VolumeBuilder;
  */
 public enum HardwareProfiles {
    C1_M1_D10(InstanceType.C1_M1_D10, "vSphere", InstanceType.C1_M1_D10, new Processor(1, 1.0), 1024, new VolumeBuilder().size(20f).type(Volume.Type.LOCAL).build()),
-   C2_M2_D30(InstanceType.C2_M2_D30, "vSphere", InstanceType.C2_M2_D30 ,new Processor(2, 1.0), 2 * 1024, new VolumeBuilder().size(30f).type(Volume.Type.LOCAL).build()),
+   C2_M2_D30(InstanceType.C2_M2_D30, "vSphere", InstanceType.C2_M2_D30, new Processor(2, 1.0), 2 * 1024, new VolumeBuilder().size(30f).type(Volume.Type.LOCAL).build()),
    C2_M2_D50(InstanceType.C2_M2_D50, "vSphere", InstanceType.C2_M2_D50, new Processor(2, 1.0), 2 * 1024, new VolumeBuilder().size(50f).type(Volume.Type.LOCAL).build()),
    C2_M4_D50(InstanceType.C2_M4_D50, "vSphere", InstanceType.C2_M4_D50, new Processor(2, 2.0), 4 * 1024, new VolumeBuilder().size(50f).type(Volume.Type.LOCAL).build()),
    C2_M10_D80(InstanceType.C2_M10_D80, "vSphere", InstanceType.C2_M10_D80, new Processor(2, 2.0), 10 * 1024, new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build()),
@@ -35,8 +35,7 @@ public enum HardwareProfiles {
    C4_M4_D20(InstanceType.C4_M4_D20, "vSphere", InstanceType.C4_M4_D20, new Processor(4, 2.0), 4 * 1024, new VolumeBuilder().size(20f).type(Volume.Type.LOCAL).build()),
    C2_M6_D40(InstanceType.C2_M6_D40, "vSphere", InstanceType.C2_M6_D40, new Processor(2, 2.0), 6 * 1024, new VolumeBuilder().size(40f).type(Volume.Type.LOCAL).build()),
    C8_M16_D30(InstanceType.C8_M16_D30, "vSphere", InstanceType.C8_M16_D30, new Processor(8, 2.0), 16 * 1024, new VolumeBuilder().size(30f).type(Volume.Type.LOCAL).build()),
-   C8_M16_D80(InstanceType.C8_M16_D80, "vSphere", InstanceType.C8_M16_D80, new Processor(8, 2.0), 16 * 1024, new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build()),
-   ;
+   C8_M16_D80(InstanceType.C8_M16_D80, "vSphere", InstanceType.C8_M16_D80, new Processor(8, 2.0), 16 * 1024, new VolumeBuilder().size(80f).type(Volume.Type.LOCAL).build());
 
    private final Hardware hardware;
 
