@@ -17,10 +17,10 @@
 package org.jclouds.vsphere.suppliers;
 
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closer;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.ManagedEntity;
 import org.jclouds.compute.reference.ComputeServiceConstants;
@@ -35,7 +35,6 @@ import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,32 +55,22 @@ public class VSphereLocationSupplier implements LocationsSupplier {
 
    private Set<? extends Location> getClusters() {
       Set<Location> hosts = Sets.newHashSet();
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
 
-            ManagedEntity[] clusterEntities = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("ClusterComputeResource");
+         ManagedEntity[] clusterEntities = new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntities("ClusterComputeResource");
 
-            for (ManagedEntity cluster : clusterEntities) {
-               Location location = new LocationImpl(LocationScope.ZONE, cluster.getName(), cluster.getName(), null, ImmutableSet.of(""), Maps.<String, Object>newHashMap());
-               hosts.add(location);
-            }
-
-            hosts.add(new LocationImpl(LocationScope.ZONE, "default", "default", null, ImmutableSet.of(""), Maps.<String, Object>newHashMap()));
-
-            return hosts;
-         } catch (Exception e) {
-            logger.error("Problem in finding a valid cluster", e);
-            closer.rethrow(e);
-         } finally {
-            closer.close();
+         for (ManagedEntity cluster : clusterEntities) {
+            Location location = new LocationImpl(LocationScope.ZONE, cluster.getName(), cluster.getName(), null, ImmutableSet.of(""), Maps.<String, Object>newHashMap());
+            hosts.add(location);
          }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
 
+         hosts.add(new LocationImpl(LocationScope.ZONE, "default", "default", null, ImmutableSet.of(""), Maps.<String, Object>newHashMap()));
+
+         return hosts;
+      } catch (Exception e) {
+         logger.error("Problem in finding a valid cluster", e);
+         Throwables.propagateIfPossible(e);
+      }
       return hosts;
    }
 

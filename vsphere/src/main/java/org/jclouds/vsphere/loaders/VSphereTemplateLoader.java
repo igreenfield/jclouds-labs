@@ -18,8 +18,8 @@ package org.jclouds.vsphere.loaders;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheLoader;
-import com.google.common.io.Closer;
 import com.vmware.vim25.mo.InventoryNavigator;
 import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.logging.Logger;
@@ -29,7 +29,6 @@ import org.jclouds.vsphere.predicates.VSpherePredicate;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,25 +46,18 @@ public class VSphereTemplateLoader extends CacheLoader<String, Optional<VirtualM
 
    @Override
    public Optional<VirtualMachine> load(String vmName) {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
-            VirtualMachine vm = (VirtualMachine) new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntity("VirtualMachine", vmName);
-            if (VSpherePredicate.isTemplatePredicate.apply(vm)) {
-               return Optional.of(vm);
-            }
-         } catch (Exception e) {
-            logger.error("Can't find template", e);
-            throw closer.rethrow(e);
-         } finally {
-            closer.close();
+      Optional<VirtualMachine> results = Optional.absent();
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         VirtualMachine vm = (VirtualMachine) new InventoryNavigator(instance.getInstance().getRootFolder()).searchManagedEntity("VirtualMachine", vmName);
+         if (VSpherePredicate.isTemplatePredicate.apply(vm)) {
+            results = Optional.of(vm);
          }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      } finally {
-         return Optional.absent();
+      } catch (Exception e) {
+         logger.error("Can't find template " + vmName, e);
+         Throwables.propagateIfPossible(e);
+
       }
+
+      return results;
    }
 }

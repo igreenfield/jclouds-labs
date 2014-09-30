@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closer;
 import com.vmware.vim25.CustomFieldDef;
 import com.vmware.vim25.Description;
 import com.vmware.vim25.DistributedVirtualSwitchPortConnection;
@@ -79,6 +78,7 @@ import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
 import org.jclouds.vsphere.VSphereApiMetadata;
+import org.jclouds.vsphere.compute.internal.GuestFilesUtils;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
 import org.jclouds.vsphere.compute.strategy.NetworkConfigurationForNetworkAndOptions;
 import org.jclouds.vsphere.compute.util.ListsUtils;
@@ -97,7 +97,7 @@ import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.io.IOException;
+import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -393,7 +393,6 @@ public class VSphereComputeServiceAdapter implements
    }
 
 
-
    @Override
    public Iterable<Hardware> listHardwareProfiles() {
       Set<org.jclouds.compute.domain.Hardware> hardware = Sets.newLinkedHashSet();
@@ -443,33 +442,23 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public void destroyNode(String vmName) {
-      Closer closer = Closer.create();
-      VSphereServiceInstance instance = serviceInstance.get();
-      closer.register(instance);
-      try {
-         try {
-            VirtualMachine virtualMachine = getVM(vmName, instance.getInstance().getRootFolder());
-            Task powerOffTask = virtualMachine.powerOffVM_Task();
-            if (powerOffTask.waitForTask().equals(Task.SUCCESS))
-               logger.debug(String.format("VM %s powered off", vmName));
-            else
-               logger.debug(String.format("VM %s could not be powered off", vmName));
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         VirtualMachine virtualMachine = getVM(vmName, instance.getInstance().getRootFolder());
+         Task powerOffTask = virtualMachine.powerOffVM_Task();
+         if (powerOffTask.waitForTask().equals(Task.SUCCESS))
+            logger.debug(String.format("VM %s powered off", vmName));
+         else
+            logger.debug(String.format("VM %s could not be powered off", vmName));
 
-            Task destroyTask = virtualMachine.destroy_Task();
-            if (destroyTask.waitForTask().equals(Task.SUCCESS))
-               logger.debug(String.format("VM %s destroyed", vmName));
-            else
-               logger.debug(String.format("VM %s could not be destroyed", vmName));
-         } catch (Exception e) {
-            logger.error("Can't destroy vm " + vmName, e);
-            throw closer.rethrow(e);
-         } finally {
-            closer.close();
-         }
-      } catch (IOException e) {
-         logger.trace(e.getMessage(), e);
+         Task destroyTask = virtualMachine.destroy_Task();
+         if (destroyTask.waitForTask().equals(Task.SUCCESS))
+            logger.debug(String.format("VM %s destroyed", vmName));
+         else
+            logger.debug(String.format("VM %s could not be destroyed", vmName));
+      } catch (Exception e) {
+         logger.error("Can't destroy vm " + vmName, e);
+         Throwables.propagateIfPossible(e);
       }
-
    }
 
    @Override
@@ -521,12 +510,12 @@ public class VSphereComputeServiceAdapter implements
 
    @Override
    public Image getImage(String imageName) {
-         try (VSphereServiceInstance instance = serviceInstance.get();) {
-            return virtualMachineToImage.apply(getVMwareTemplate(imageName, instance.getInstance().getRootFolder()));
-         } catch (Throwable t) {
-            Throwables.propagateIfPossible(t);
-            return null;
-         }
+      try (VSphereServiceInstance instance = serviceInstance.get();) {
+         return virtualMachineToImage.apply(getVMwareTemplate(imageName, instance.getInstance().getRootFolder()));
+      } catch (Throwable t) {
+         Throwables.propagateIfPossible(t);
+         return null;
+      }
    }
 
    private VirtualMachine cloneMaster(VirtualMachine master, String tag, String name, VirtualMachineCloneSpec cloneSpec, String folderName) {
@@ -697,27 +686,19 @@ public class VSphereComputeServiceAdapter implements
          VSpherePredicate.WAIT_FOR_VMTOOLS(10 * 1000 * 60, TimeUnit.MILLISECONDS).apply(vm);
 
       GuestOperationsManager gom = serviceInstance.get().getInstance().getGuestOperationsManager();
-      GuestAuthManager gam = gom.getAuthManager(vm);
       NamePasswordAuthentication npa = new NamePasswordAuthentication();
       npa.setUsername("root");
       npa.setPassword(vmInitPassword);
       GuestProgramSpec gps = new GuestProgramSpec();
+
+      InputStream in = VSphereComputeServiceAdapter.class.getResourceAsStream("/postConfigurationScript.sh");
+      GuestFilesUtils.loadFileToGuest(vm, in, npa, serviceInstance.get(), "/tmp/ping_dns.sh");
+
       gps.programPath = "/bin/sh";
 
       StringBuilder ethScript = new StringBuilder();
 
-      ethScript.append("\necho \\\"#!/bin/bash\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"c=1\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"while [ \\\\\\$c -le 12 ]; do\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"[ -f /etc/resolv.conf ] && break\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"(( c++ ))\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"sleep 5\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"done\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\necho \\\"[ -f /etc/resolv.conf ] && grep nameserver /etc/resolv.conf | awk '{ if(length(\\\\\\$2) > 0) system(\\\\\\\"ping -c 4 \\\\\\\" \\\\\\$2); }' > /tmp/ping-results.log 2>&1\\\" >> /tmp/ping_dns.sh;");
-      ethScript.append("\nchmod +x /tmp/ping_dns.sh;");
-      ethScript.append("\n/tmp/ping_dns.sh;");
-      ethScript.append("\nmkdir -p ~/.ssh;");
-      ethScript.append("\nrestorecon -FRvv ~/.ssh;");
+      ethScript.append("/tmp/ping_dns.sh");
 
       gps.arguments = "-c \"" + ethScript.toString() + "\"";
 
