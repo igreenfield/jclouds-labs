@@ -539,7 +539,7 @@ public class VSphereComputeServiceAdapter implements
                     .withStopStrategy(StopStrategies.stopAfterAttempt(5))
                     .retryIfException().withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
                     .build();
-            cloned = retryer.call(new AfterCloneCallable(name, folder, serviceInstance.get().getInstance().getRootFolder()));
+            cloned = retryer.call(new GetVirtualMachineCallable(name, folder, serviceInstance.get().getInstance().getRootFolder()));
          } else {
             String errorMessage = task.getTaskInfo().getError().getLocalizedMessage();
             logger.error(errorMessage);
@@ -551,12 +551,12 @@ public class VSphereComputeServiceAdapter implements
       return checkNotNull(cloned, "cloned");
    }
 
-   class AfterCloneCallable implements Callable<VirtualMachine> {
+   public class GetVirtualMachineCallable implements Callable<VirtualMachine> {
       private String vmName = null;
       private Folder folder = null;
       private Folder rootFolder = null;
 
-      AfterCloneCallable(String vmName, Folder folder, Folder rootFolder) {
+      GetVirtualMachineCallable(String vmName, Folder folder, Folder rootFolder) {
          this.vmName = vmName;
          this.folder = folder;
          this.rootFolder = rootFolder;

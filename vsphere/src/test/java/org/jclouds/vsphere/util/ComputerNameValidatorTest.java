@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Date: 29/06/2014 10:53 AM
- * Package: org.jclouds.vsphere.util
  */
 @Test(groups = "unit", testName = "VSpherePredicateTest")
 public class ComputerNameValidatorTest {
