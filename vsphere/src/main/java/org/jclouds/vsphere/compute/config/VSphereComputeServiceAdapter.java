@@ -16,9 +16,14 @@
  */
 package org.jclouds.vsphere.compute.config;
 
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -105,6 +110,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -527,15 +533,13 @@ public class VSphereComputeServiceAdapter implements
          Task task = master.cloneVM_Task(folder, name, cloneSpec);
          String result = task.waitForTask();
          if (result.equals(Task.SUCCESS)) {
-            while (cloned == null) {
-               logger.trace("<< after clone search for VM with name: " + name);
-               cloned = getVM(name, folder);
-               if (cloned == null)
-                  folder = serviceInstance.get().getInstance().getRootFolder();
-               else
-                  break;
-               sleep(500);
-            }
+            logger.trace("<< after clone search for VM with name: " + name);
+            Retryer<VirtualMachine> retryer = RetryerBuilder.<VirtualMachine>newBuilder()
+                    .retryIfResult(Predicates.<VirtualMachine>isNull())
+                    .withStopStrategy(StopStrategies.stopAfterAttempt(5))
+                    .retryIfException().withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
+                    .build();
+            cloned = retryer.call(new AfterCloneCallable(name, folder, serviceInstance.get().getInstance().getRootFolder()));
          } else {
             String errorMessage = task.getTaskInfo().getError().getLocalizedMessage();
             logger.error(errorMessage);
@@ -545,6 +549,27 @@ public class VSphereComputeServiceAdapter implements
          propagate(e);
       }
       return checkNotNull(cloned, "cloned");
+   }
+
+   class AfterCloneCallable implements Callable<VirtualMachine> {
+      private String vmName = null;
+      private Folder folder = null;
+      private Folder rootFolder = null;
+
+      AfterCloneCallable(String vmName, Folder folder, Folder rootFolder) {
+         this.vmName = vmName;
+         this.folder = folder;
+         this.rootFolder = rootFolder;
+      }
+
+      @Override
+      public VirtualMachine call() throws Exception {
+         VirtualMachine cloned = null;
+         cloned = getVM(vmName, folder);
+         if (cloned == null)
+            cloned = getVM(vmName, rootFolder);
+         return cloned;
+      }
    }
 
    private static void sleep(long time) {

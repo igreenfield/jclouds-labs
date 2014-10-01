@@ -27,6 +27,7 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
+import org.testng.annotations.Test;
 
 import java.util.Properties;
 import java.util.Set;
@@ -41,7 +42,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-//@Test(groups = "unit", testName = "ContextBuilderTest")
+@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
    public void testVSphereContext() throws RunNodesException {
       ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
@@ -72,6 +73,21 @@ public class ContextBuilderTest {
       System.out.print("");
    }
 
+
+   public void testOpenVmTools() throws Exception {
+      ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
+      Properties p = new Properties();
+      p.put("jclouds.vsphere.vm.password", "Nat0d12");
+      ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
+              .credentials("root", "vmware")
+              .endpoint("https://10.63.120.120/sdk")
+              .modules(modules)
+              .overrides(p)
+              .buildView(ComputeServiceContext.class);
+
+      NodeMetadata nodeMetadata = context.getComputeService().getNodeMetadata("zenit-ccp0");
+      System.out.print(nodeMetadata);
+   }
    public void testPhenixVsphere() throws Exception {
       ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
       Properties p = new Properties();
