@@ -40,14 +40,14 @@ public class RetryerTest {
               .retryIfResult(new Predicate<Boolean>() {
                  @Override
                  public boolean apply(@Nullable Boolean aBoolean) {
-                    return aBoolean == false;
+                    return aBoolean.equals(false);
                  }
               })
               .withStopStrategy(StopStrategies.stopAfterAttempt(5))
               .retryIfException().withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
               .build();
 
-      Assert.assertTrue(retryer.call(new TempCallable()),"Should return true");
+      Assert.assertTrue(retryer.call(new TempCallable()), "Should return true");
    }
 
    class TempCallable implements Callable<Boolean> {
