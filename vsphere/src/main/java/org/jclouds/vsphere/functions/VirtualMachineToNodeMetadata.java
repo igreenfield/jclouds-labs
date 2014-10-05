@@ -159,7 +159,9 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
          Set<String> ipv4Addresses = newHashSet();
          Set<String> ipv6Addresses = newHashSet();
 
-         if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate() && VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsOk).apply(freshVm)) {
+         if (nodeState == Status.RUNNING && !freshVm.getConfig().isTemplate() &&
+                 VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsOk).apply(freshVm) &&
+                 VSpherePredicate.isNicConnected.apply(freshVm)) {
             Predicates2.retry(new Predicate<VirtualMachine>() {
                @Override
                public boolean apply(VirtualMachine vm) {
@@ -181,8 +183,11 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                ipv4Addresses.clear();
                ipv6Addresses.clear();
                GuestNicInfo[] nics = freshVm.getGuest().getNet();
+               boolean nicConnected = false;
                if (null != nics) {
                   for (GuestNicInfo nic : nics) {
+                     nicConnected = nicConnected || nic.connected;
+
                      String[] addresses = nic.getIpAddress();
                      if (null != addresses) {
                         for (String address : addresses) {
@@ -210,6 +215,11 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                   } else if (isInet6Address.apply(ip)) {
                      ipv6Addresses.add(ip);
                   }
+                  break;
+               }
+
+               if (!nicConnected) {
+                  logger.trace("<< VM does NOT have any NIC connected.");
                   break;
                }
 

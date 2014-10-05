@@ -18,12 +18,14 @@ package org.jclouds.vsphere.predicates;
 
 import com.google.common.base.Predicate;
 import com.google.common.net.InetAddresses;
+import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.ResourcePool;
 import com.vmware.vim25.mo.VirtualMachine;
 import org.jclouds.util.Predicates2;
 
+import javax.annotation.Nullable;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.rmi.RemoteException;
@@ -76,6 +78,22 @@ public class VSpherePredicate {
          }
       }
 
+   };
+
+   public static final Predicate<VirtualMachine> isNicConnected = new Predicate<VirtualMachine>() {
+      @Override
+      public boolean apply(@Nullable VirtualMachine input) {
+         if (input == null)
+            return false;
+         GuestNicInfo[] nics = input.getGuest().getNet();
+         boolean nicConnected = false;
+         if (null != nics) {
+            for (GuestNicInfo nic : nics) {
+               nicConnected = nicConnected || nic.connected;
+            }
+         }
+         return nicConnected;
+      }
    };
 
    public static final Predicate<VirtualMachine> WAIT_FOR_NIC(Integer timeout, TimeUnit timeUnit) {

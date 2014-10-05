@@ -23,6 +23,7 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -82,6 +83,7 @@ import org.jclouds.compute.reference.ComputeServiceConstants;
 import org.jclouds.domain.Location;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.logging.Logger;
+import org.jclouds.util.Predicates2;
 import org.jclouds.vsphere.VSphereApiMetadata;
 import org.jclouds.vsphere.compute.internal.GuestFilesUtils;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
@@ -216,6 +218,8 @@ public class VSphereComputeServiceAdapter implements
             propagate(e);
          }
 
+         CheckAndRecoverNicConfiguration(serviceInstance.get(), cloned);
+
          NodeAndInitialCredentials<VirtualMachine> nodeAndInitialCredentials = new NodeAndInitialCredentials<VirtualMachine>(cloned, cloned.getName(),
                  LoginCredentials.builder().user("root")
                          .password(vmInitPassword)
@@ -225,6 +229,57 @@ public class VSphereComputeServiceAdapter implements
          Throwables.propagateIfPossible(t);
       }
       return null;
+   }
+
+   private void CheckAndRecoverNicConfiguration(VSphereServiceInstance instance, VirtualMachine vm) throws RemoteException, InterruptedException {
+      List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
+      String originalKey = "";
+      for (VirtualDevice device : vm.getConfig().getHardware().getDevice()) {
+         if (device instanceof VirtualEthernetCard) {
+            VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
+            if (ethernetCard.getConnectable().connected)
+               continue;
+
+            VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
+            ethernetCard.getConnectable().setConnected(true);
+            ethernetCard.getConnectable().setStartConnected(true);
+
+            nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+            nicSpec.setDevice(device);
+
+            updates.add(nicSpec);
+         }
+      }
+      VirtualMachineConfigSpec spec = new VirtualMachineConfigSpec();
+      spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+      Task task = vm.reconfigVM_Task(spec);
+      String result = task.waitForTask();
+      if (result.equals(Task.SUCCESS)) {
+         GuestOperationsManager gom = instance.getInstance().getGuestOperationsManager();
+         GuestAuthManager gam = gom.getAuthManager(vm);
+         final NamePasswordAuthentication npa = new NamePasswordAuthentication();
+         npa.setUsername("root");
+         npa.setPassword(vmInitPassword);
+         GuestProgramSpec gps = new GuestProgramSpec();
+         gps.programPath = "/bin/sh";
+         gps.arguments = "-c \"service network restart\"";
+         List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin", "SHELL=/bin/bash");
+         gps.setEnvVariables(env.toArray(new String[env.size()]));
+         GuestProcessManager gpm = gom.getProcessManager(vm);
+         final long pid = gpm.startProgramInGuest(npa, gps);
+         Predicates2.retry(new Predicate<GuestProcessManager>() {
+            @Override
+            public boolean apply(GuestProcessManager o) {
+               try {
+                  GuestProcessInfo[] guestProcessInfos = o.listProcessesInGuest(npa, new long[]{pid});
+                  return guestProcessInfos == null || guestProcessInfos.length == 0;
+               } catch (RemoteException e) {
+                  return false;
+               }
+
+            }
+         }, 20 * 1000, 1000, TimeUnit.MILLISECONDS).apply(gpm);
+      }
    }
 
    private List<VirtualDeviceConfigSpec> configureVmHardware(String name, Template template, VirtualMachine master, VSphereTemplateOptions vOptions, Set<NetworkConfig> networkConfigs) {
