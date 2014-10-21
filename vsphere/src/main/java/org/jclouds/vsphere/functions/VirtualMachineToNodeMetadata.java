@@ -218,7 +218,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
                   break;
                }
 
-               if (!nicConnected) {
+               if (!nicConnected && retries == 5) {
                   logger.trace("<< VM does NOT have any NIC connected.");
                   break;
                }
@@ -252,6 +252,7 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
          return nodeMetadataBuilder.build();
       } catch (Throwable t) {
          logger.error("Got an exception for virtual machine name : " + virtualMachineName);
+         logger.error("The exception is : " + t.toString());
          Throwables.propagate(t);
          return nodeMetadataBuilder.build();
       }

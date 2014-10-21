@@ -592,7 +592,7 @@ public class VSphereComputeServiceAdapter implements
             Retryer<VirtualMachine> retryer = RetryerBuilder.<VirtualMachine>newBuilder()
                     .retryIfResult(Predicates.<VirtualMachine>isNull())
                     .withStopStrategy(StopStrategies.stopAfterAttempt(5))
-                    .retryIfException().withWaitStrategy(WaitStrategies.fixedWait(500, TimeUnit.MILLISECONDS))
+                    .retryIfException().withWaitStrategy(WaitStrategies.fixedWait(1, TimeUnit.SECONDS))
                     .build();
             cloned = retryer.call(new GetVirtualMachineCallable(name, folder, serviceInstance.get().getInstance().getRootFolder()));
          } else {
@@ -603,6 +603,8 @@ public class VSphereComputeServiceAdapter implements
          logger.error("Can't clone vm: " + e.toString(), e);
          propagate(e);
       }
+      if (cloned == null)
+         logger.error("<< Failed to get cloned VM. " + name);
       return checkNotNull(cloned, "cloned");
    }
 
@@ -778,7 +780,7 @@ public class VSphereComputeServiceAdapter implements
 
       StringBuilder ethScript = new StringBuilder();
 
-      ethScript.append("/tmp/ping_dns.sh");
+      ethScript.append("/tmp/ping_dns.sh > jclouds.log 2>&1");
 
       gps.arguments = "-c \"" + ethScript.toString() + "\"";
 

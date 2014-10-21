@@ -63,12 +63,12 @@ public class GuestFilesUtils {
          while ((len = in.read(buffer)) > 0) {
             out.write(buffer, 0, len);
          }
-         if (in != null)
-            in.close();
          if (out != null) {
             out.flush();
             out.close();
          }
+         if (in != null)
+            in.close();
       return true;
       } catch (Exception e) {
          return false;
