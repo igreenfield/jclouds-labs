@@ -42,6 +42,7 @@ import com.vmware.vim25.NamePasswordAuthentication;
 import com.vmware.vim25.ParaVirtualSCSIController;
 import com.vmware.vim25.VirtualCdrom;
 import com.vmware.vim25.VirtualCdromIsoBackingInfo;
+import com.vmware.vim25.VirtualController;
 import com.vmware.vim25.VirtualDevice;
 import com.vmware.vim25.VirtualDeviceBackingInfo;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
@@ -348,7 +349,7 @@ public class VSphereComputeServiceAdapter implements
             //int unitNumber = master.getConfig().getHardware().getDevice().length;
             int unitNumber = numberOfHardDrives;
             List<? extends Volume> volumes = template.getHardware().getVolumes();
-            VirtualDevice controller = (VirtualDevice) device;
+            VirtualController controller = (VirtualController) device;
             String dsName = vSphereHost.get().getDatastore().getName();
             for (Volume volume : volumes) {
 
@@ -364,7 +365,9 @@ public class VSphereComputeServiceAdapter implements
 
 
                int ckey = controller.getKey();
-               unitNumber++;
+               if (controller.getDevice().length >= 15)
+                  throw new IllegalArgumentException("Can't add more then 15 HHD to controller.");
+               unitNumber = controller.getDevice().length + 1;
 
                String fileName = "[" + dsName + "] " + name + "/" + name + unitNumber + ".vmdk";
 
@@ -376,7 +379,8 @@ public class VSphereComputeServiceAdapter implements
                disk.setUnitNumber(unitNumber);
                disk.setBacking(diskFileBacking);
                long size = currentVolumeSize - currentDiskSize;
-               logger.trace("<< adding disk size: " + size + "KB");
+               logger.trace("<< current disk size: " + currentDiskSize + "KB. (" + name + ")");
+               logger.trace("<< adding disk size: " + size + "KB. (" + name + ")");
                disk.setCapacityInKB(size);
                disk.setKey(-1);
 
