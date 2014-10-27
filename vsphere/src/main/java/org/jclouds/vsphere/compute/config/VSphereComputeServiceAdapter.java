@@ -39,6 +39,7 @@ import com.vmware.vim25.FileTransferInformation;
 import com.vmware.vim25.GuestProcessInfo;
 import com.vmware.vim25.GuestProgramSpec;
 import com.vmware.vim25.NamePasswordAuthentication;
+import com.vmware.vim25.NoPermission;
 import com.vmware.vim25.ParaVirtualSCSIController;
 import com.vmware.vim25.VirtualCdrom;
 import com.vmware.vim25.VirtualCdromIsoBackingInfo;
@@ -142,12 +143,14 @@ public class VSphereComputeServiceAdapter implements
    private final VirtualMachineToImage virtualMachineToImage;
    protected final NetworkConfigurationForNetworkAndOptions networkConfigurationForNetworkAndOptions;
    private final Supplier<VSphereHost> vSphereHost;
+   private final Function<String, VSphereHost> hostFunction;
 
    @Inject
    public VSphereComputeServiceAdapter(Supplier<VSphereServiceInstance> serviceInstance, Supplier<Map<String, CustomFieldDef>> customFields, Supplier<VSphereHost> vSphereHost,
                                        VirtualMachineToImage virtualMachineToImage,
                                        Function<String, DistributedVirtualPortgroup> distributedVirtualSwitchFunction,
                                        NetworkConfigurationForNetworkAndOptions networkConfigurationForNetworkAndOptions,
+                                       Function<String, VSphereHost> hostFunction,
                                        @Named(VSphereConstants.JCLOUDS_VSPHERE_VM_PASSWORD) String vmInitPassword) {
       this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
       this.customFields = checkNotNull(customFields, "customFields");
@@ -156,13 +159,18 @@ public class VSphereComputeServiceAdapter implements
       this.networkConfigurationForNetworkAndOptions = checkNotNull(networkConfigurationForNetworkAndOptions, "networkConfigurationForNetworkAndOptions");
       this.vSphereHost = checkNotNull(vSphereHost, "vSphereHost");
       this.distributedVirtualPortgroupFunction = distributedVirtualSwitchFunction;
+      this.hostFunction = hostFunction;
    }
 
    @Override
    public NodeAndInitialCredentials<VirtualMachine> createNodeWithGroupEncodedIntoName(String tag, String name, Template template) {
 
+      VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+
+      String datacenterName = vOptions.datacenterName();
       try (VSphereServiceInstance instance = this.serviceInstance.get();
-           VSphereHost sphereHost = vSphereHost.get();) {
+           VSphereHost sphereHost = hostFunction.apply(datacenterName);
+           /*VSphereHost sphereHost = vSphereHost.get();*/) {
          Folder rootFolder = instance.getInstance().getRootFolder();
 
          ComputerNameValidator.INSTANCE.validate(name);
@@ -170,7 +178,8 @@ public class VSphereComputeServiceAdapter implements
          VirtualMachine master = getVMwareTemplate(template.getImage().getId(), rootFolder);
          ResourcePool resourcePool = checkNotNull(tryFindResourcePool(rootFolder, sphereHost.getHost().getName()).orNull(), "resourcePool");
 
-         VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+        // VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
+
 
          VirtualMachineCloneSpec cloneSpec = new MasterToVirtualMachineCloneSpec(resourcePool, sphereHost.getDatastore(),
                  VSphereApiMetadata.defaultProperties().getProperty(CLONING), name, vOptions.postConfiguration()).apply(master);
@@ -288,15 +297,11 @@ public class VSphereComputeServiceAdapter implements
       long currentDiskSize = 0;
       int numberOfHardDrives = 0;
 
-      int diskKey = 0;
-
       for (VirtualDevice device : master.getConfig().getHardware().getDevice()) {
          if (device instanceof VirtualDisk) {
             VirtualDisk vd = (VirtualDisk) device;
-            diskKey = vd.getKey();
             currentDiskSize += vd.getCapacityInKB();
             numberOfHardDrives++;
-            break;
          }
       }
 
@@ -350,7 +355,7 @@ public class VSphereComputeServiceAdapter implements
             int unitNumber = numberOfHardDrives;
             List<? extends Volume> volumes = template.getHardware().getVolumes();
             VirtualController controller = (VirtualController) device;
-            String dsName = vSphereHost.get().getDatastore().getName();
+            String dsName = this.hostFunction.apply(vOptions.datacenterName()).getDatastore().getName();
             for (Volume volume : volumes) {
 
                long currentVolumeSize = 1024 * 1024 * volume.getSize().longValue();
@@ -362,7 +367,6 @@ public class VSphereComputeServiceAdapter implements
 
                VirtualDisk disk = new VirtualDisk();
                VirtualDiskFlatVer2BackingInfo diskFileBacking = new VirtualDiskFlatVer2BackingInfo();
-
 
                int ckey = controller.getKey();
                if (controller.getDevice().length >= 15)
@@ -604,6 +608,10 @@ public class VSphereComputeServiceAdapter implements
             logger.error(errorMessage);
          }
       } catch (Exception e) {
+         if (e instanceof NoPermission){
+            NoPermission noPermission = (NoPermission)e;
+            logger.error("NoPermission: " + noPermission.getPrivilegeId());
+         }
          logger.error("Can't clone vm: " + e.toString(), e);
          propagate(e);
       }
@@ -680,7 +688,7 @@ public class VSphereComputeServiceAdapter implements
          logger.error("cannot find an image called " + imageName, e);
          propagate(e);
       }
-      return checkNotNull(image, "image");
+      return checkNotNull(image, "image with name " + imageName + " not found.");
    }
 
    private List<VirtualDeviceConfigSpec> createNicSpec(Set<NetworkConfig> networks, boolean hasVMWareTools, boolean distributedSwitch) {

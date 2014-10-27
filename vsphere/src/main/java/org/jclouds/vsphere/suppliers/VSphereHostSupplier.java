@@ -47,7 +47,8 @@ public class VSphereHostSupplier implements Supplier<VSphereHost> {
    private Function<HostSystem, VSphereHost> systemHostToVSphereHost;
 
    @Inject
-   public VSphereHostSupplier(Supplier<VSphereServiceInstance> serviceInstance, Function<HostSystem, VSphereHost> systemHostToVSphereHost) {
+   public VSphereHostSupplier(Supplier<VSphereServiceInstance> serviceInstance,
+                              Function<HostSystem, VSphereHost> systemHostToVSphereHost) {
       this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
       this.systemHostToVSphereHost = checkNotNull(systemHostToVSphereHost, "systemHostToVSphereHost");
    }
@@ -76,7 +77,7 @@ public class VSphereHostSupplier implements Supplier<VSphereHost> {
 
          return curHostSystem;
       } catch (Exception e) {
-         logger.error("Problem in finding a valid host", e);
+         logger.error("Problem in finding a valid host: " + e.toString(), e);
       }
       return null;
    }

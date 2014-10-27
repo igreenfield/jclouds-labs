@@ -17,22 +17,37 @@
 
 package org.jclouds.vsphere.domain;
 
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.HostSystem;
+import com.vmware.vim25.mo.InventoryNavigator;
+import com.vmware.vim25.mo.ManagedEntity;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class VSphereHost implements Closeable {
+   private Supplier<VSphereServiceInstance> serviceInstanceSupplier;
    private VSphereServiceInstance serviceInstance;
    private HostSystem host;
 
    public VSphereHost(HostSystem host, VSphereServiceInstance serviceInstance) {
       this.host = checkNotNull(host, "host");
       this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
+   }
+
+   public VSphereHost(String hostName, VSphereServiceInstance serviceInstance) {
+      this.serviceInstance = checkNotNull(serviceInstance, "serviceInstance");
+      try {
+         ManagedEntity hostEntity = new InventoryNavigator(serviceInstance.getInstance().getRootFolder()).searchManagedEntity("HostSystem", hostName);
+         this.host = checkNotNull((HostSystem)hostEntity, "host");
+      } catch (RemoteException e) {
+         e.printStackTrace();
+      }
    }
 
    public HostSystem getHost() {

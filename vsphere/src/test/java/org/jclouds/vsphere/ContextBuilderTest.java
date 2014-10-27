@@ -27,6 +27,7 @@ import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.concurrent.config.ExecutorServiceModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.vsphere.compute.options.VSphereTemplateOptions;
+import org.testng.annotations.Test;
 
 import java.util.Properties;
 import java.util.Set;
@@ -41,7 +42,7 @@ import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor
  * To change this template use File | Settings | File Templates.
  */
 
-//@Test(groups = "unit", testName = "ContextBuilderTest")
+@Test(groups = "unit", testName = "ContextBuilderTest")
 public class ContextBuilderTest {
    public void testVSphereContext() throws RunNodesException {
       ImmutableSet modules = ImmutableSet.of(new ExecutorServiceModule(sameThreadExecutor(), sameThreadExecutor()), new SshjSshClientModule());
@@ -80,6 +81,7 @@ public class ContextBuilderTest {
       ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
               .credentials("root", "vmware")
               .endpoint("https://10.63.120.120/sdk")
+
               .modules(modules)
               .overrides(p)
               .buildView(ComputeServiceContext.class);
@@ -94,6 +96,8 @@ public class ContextBuilderTest {
       ComputeServiceContext context = ContextBuilder.newBuilder("vsphere")
               .credentials("root", "vmware")
               .endpoint("https://10.63.120.120/sdk")
+//              .credentials("ci-scope.gen@prime", "c1-Scope")
+//              .endpoint("https://vcte-vcenter.cisco.com/sdk")
               .modules(modules)
               .overrides(p)
               .buildView(ComputeServiceContext.class);
@@ -102,15 +106,16 @@ public class ContextBuilderTest {
       TemplateOptions o = context.getComputeService().templateOptions();
       ((VSphereTemplateOptions) o).postConfiguration(true);
       ((VSphereTemplateOptions) o).distributedVirtualSwitch(true);
-      ((VSphereTemplateOptions) o).vmFolder("CI");
+      ((VSphereTemplateOptions) o).vmFolder("campnou");
+      ((VSphereTemplateOptions) o).datacenterName("PHOENIX");
 
       o.tags(ImmutableSet.of("from UnitTest"))
               .nodeNames(ImmutableSet.of("first-vm12"))
-              .networks("VLAN_291");
+              .networks("BVLAN_293");
 //        b.imageId("Cisco Centos 6.5").smallest();
 //        b.imageId("Cisco Centos 6.5.0").smallest().options(o);
       //b.imageId("Cisco Centos 6.5").locationId("default").smallest().options(o);
-      b.imageId("SCOPE-RHEL-6.5").locationId("default").minRam(10000).options(o);
+      b.imageId("SCOPE-TMP-DB").locationId("PHOENIX").minRam(10000).options(o);
 
       // Set images = context.getComputeService().listNodesByIds(ImmutableSet.of("junit-test-9b7"));
       Set<? extends NodeMetadata> nodes = context.getComputeService().createNodesInGroup("junit-test", 1, b.build());

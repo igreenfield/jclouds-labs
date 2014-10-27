@@ -62,9 +62,10 @@ public class VirtualMachineToImage implements Function<VirtualMachine, Image> {
       String guestFamily = from.getConfig().getGuestId();
       // TODO every template should contain this annotation ...
       String annotation = from.getConfig().getAnnotation();
-      OsFamily family = parseOsFamilyOrUnrecognized(annotation);
+      OsFamily family = annotation == null ? OsFamily.UNRECOGNIZED : parseOsFamilyOrUnrecognized(annotation);
+      String description = annotation == null ? guestFamily : annotation;
       String version = parseVersionOrReturnEmptyString(family, annotation, osVersionMap);
-      OperatingSystem os = OperatingSystem.builder().description(annotation).family(family)
+      OperatingSystem os = OperatingSystem.builder().description(description).family(family)
               .version(version).is64Bit(true).arch("x86_64").build();
 
       return new ImageBuilder()

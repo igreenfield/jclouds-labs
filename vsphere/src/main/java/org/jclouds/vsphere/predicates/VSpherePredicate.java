@@ -30,6 +30,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.rmi.RemoteException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -110,6 +111,10 @@ public class VSpherePredicate {
 
    public static Predicate<VirtualMachine> IsToolsStatusEquals(VirtualMachineToolsStatus status) {
       return new IsToolsStatusEquals(status);
+   }
+
+   public static Predicate<VirtualMachine> IsToolsStatusIsIn(List<VirtualMachineToolsStatus> statuses) {
+      return new IsToolsStatusIsIn(statuses);
    }
 
    public static Predicate<VirtualMachine> hasMORid(String morId) {
@@ -253,6 +258,32 @@ class IsToolsStatusEquals implements Predicate<VirtualMachine> {
    @Override
    public String toString() {
       return "IsToolsStatusEquals";
+   }
+
+}
+
+class IsToolsStatusIsIn implements Predicate<VirtualMachine> {
+
+   private List<VirtualMachineToolsStatus> statuses;
+
+   IsToolsStatusIsIn(List<VirtualMachineToolsStatus> statuses) {
+      this.statuses = statuses;
+   }
+
+   @Override
+   public boolean apply(VirtualMachine input) {
+      try {
+         if (statuses.contains(input.getGuest().getToolsStatus()))
+            return true;
+      } catch (Exception e) {
+         return false;
+      }
+      return false;
+   }
+
+   @Override
+   public String toString() {
+      return "IsToolsStatusIsIn";
    }
 
 }

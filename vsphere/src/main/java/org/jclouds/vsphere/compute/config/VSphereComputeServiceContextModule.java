@@ -46,6 +46,7 @@ import org.jclouds.vsphere.domain.VSphereHost;
 import org.jclouds.vsphere.domain.VSphereServiceInstance;
 import org.jclouds.vsphere.functions.CreateAndConnectVSphereClient;
 import org.jclouds.vsphere.functions.CreateOrGetTagsId;
+import org.jclouds.vsphere.functions.GetRecommendedVSphereHost;
 import org.jclouds.vsphere.functions.HostSystemToVSphereHost;
 import org.jclouds.vsphere.functions.NetworkConfigSupplier;
 import org.jclouds.vsphere.functions.VLanNameToDistributedVirtualPortgroup;
@@ -117,6 +118,9 @@ public class VSphereComputeServiceContextModule extends
 
       bind(new TypeLiteral<Function<VirtualMachine, Image>>() {
       }).to(VirtualMachineToImage.class);
+
+      bind(new TypeLiteral<Function<String, VSphereHost>>() {
+      }).to(GetRecommendedVSphereHost.class);
    }
 
    @VisibleForTesting

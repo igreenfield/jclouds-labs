@@ -175,8 +175,8 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
          }
 
 
-         if (VSpherePredicate.IsToolsStatusEquals(VirtualMachineToolsStatus.toolsNotInstalled).apply(freshVm))
-            logger.trace("<< No VMware tools installed ( " + virtualMachineName + " )");
+         if (VSpherePredicate.IsToolsStatusIsIn(Lists.newArrayList(VirtualMachineToolsStatus.toolsNotInstalled, VirtualMachineToolsStatus.toolsNotRunning)).apply(freshVm))
+            logger.trace("<< No VMware tools installed or not running ( " + virtualMachineName + " )");
          else if (nodeState == Status.RUNNING && not(VSpherePredicate.isTemplatePredicate).apply(freshVm)) {
             int retries = 0;
             while (ipv4Addresses.size() < 1) {
@@ -210,10 +210,12 @@ public class VirtualMachineToNodeMetadata implements Function<VirtualMachine, No
 
                if (freshVm.getGuest().getToolsVersionStatus2().equals("guestToolsUnmanaged") && nics == null) {
                   String ip = freshVm.getGuest().getIpAddress();
-                  if (isInet4Address.apply(ip)) {
-                     ipv4Addresses.add(ip);
-                  } else if (isInet6Address.apply(ip)) {
-                     ipv6Addresses.add(ip);
+                  if (!Strings.isNullOrEmpty(ip)) {
+                     if (isInet4Address.apply(ip)) {
+                        ipv4Addresses.add(ip);
+                     } else if (isInet6Address.apply(ip)) {
+                        ipv6Addresses.add(ip);
+                     }
                   }
                   break;
                }

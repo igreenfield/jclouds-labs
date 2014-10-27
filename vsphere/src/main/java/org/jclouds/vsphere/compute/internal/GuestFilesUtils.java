@@ -43,6 +43,7 @@ public class GuestFilesUtils {
          posixFileAttributes.setModificationTime(modCal);
          int fileSize = in.available();
          String upUrlStr = serviceInstance.getInstance().getGuestOperationsManager().getFileManager(vm).initiateFileTransferToGuest(npa, fullPathToFileInGuest, posixFileAttributes, fileSize, true);
+         //upUrlStr.replace("\\*", serviceInstance.getInstance().getServerConnection().getUrl().getHost());
          HttpURLConnection putCon = (HttpURLConnection) new URL(upUrlStr).openConnection();
          putCon.setDoInput(true);
          putCon.setDoOutput(true);
