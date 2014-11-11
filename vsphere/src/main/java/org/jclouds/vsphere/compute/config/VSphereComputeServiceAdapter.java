@@ -178,6 +178,7 @@ public class VSphereComputeServiceAdapter implements
          VirtualMachine master = getVMwareTemplate(template.getImage().getId(), rootFolder);
          ResourcePool resourcePool = checkNotNull(tryFindResourcePool(rootFolder, sphereHost.getHost().getName()).orNull(), "resourcePool");
 
+         logger.trace("<< trying to use ResourcePool: " + resourcePool.getName());
         // VSphereTemplateOptions vOptions = VSphereTemplateOptions.class.cast(template.getOptions());
 
 
@@ -228,7 +229,7 @@ public class VSphereComputeServiceAdapter implements
             propagate(e);
          }
 
-         CheckAndRecoverNicConfiguration(serviceInstance.get(), cloned);
+         checkAndRecoverNicConfiguration(serviceInstance.get(), cloned);
 
          NodeAndInitialCredentials<VirtualMachine> nodeAndInitialCredentials = new NodeAndInitialCredentials<VirtualMachine>(cloned, cloned.getName(),
                  LoginCredentials.builder().user("root")
@@ -236,59 +237,67 @@ public class VSphereComputeServiceAdapter implements
                          .build());
          return nodeAndInitialCredentials;
       } catch (Throwable t) {
+         logger.error("Got ERROR while create new VM : " + t.toString());
          Throwables.propagateIfPossible(t);
       }
       return null;
    }
 
-   private void CheckAndRecoverNicConfiguration(VSphereServiceInstance instance, VirtualMachine vm) throws RemoteException, InterruptedException {
-      List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
-      String originalKey = "";
-      for (VirtualDevice device : vm.getConfig().getHardware().getDevice()) {
-         if (device instanceof VirtualEthernetCard) {
-            VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
-            if (ethernetCard.getConnectable().connected)
-               continue;
+   private void checkAndRecoverNicConfiguration(VSphereServiceInstance instance, VirtualMachine vm) throws RemoteException, InterruptedException {
+      try {
+         List<VirtualDeviceConfigSpec> updates = Lists.newArrayList();
+         for (VirtualDevice device : vm.getConfig().getHardware().getDevice()) {
+            if (device instanceof VirtualEthernetCard) {
+               VirtualEthernetCard ethernetCard = (VirtualEthernetCard) device;
+               if (ethernetCard.getConnectable().connected)
+                  continue;
 
-            VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
-            ethernetCard.getConnectable().setConnected(true);
-            ethernetCard.getConnectable().setStartConnected(true);
+               VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
+               ethernetCard.getConnectable().setConnected(true);
+               ethernetCard.getConnectable().setStartConnected(true);
 
-            nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
-            nicSpec.setDevice(device);
+               nicSpec.setOperation(VirtualDeviceConfigSpecOperation.edit);
+               nicSpec.setDevice(device);
 
-            updates.add(nicSpec);
-         }
-      }
-      VirtualMachineConfigSpec spec = new VirtualMachineConfigSpec();
-      spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
-      Task task = vm.reconfigVM_Task(spec);
-      String result = task.waitForTask();
-      if (result.equals(Task.SUCCESS)) {
-         GuestOperationsManager gom = instance.getInstance().getGuestOperationsManager();
-         GuestAuthManager gam = gom.getAuthManager(vm);
-         final NamePasswordAuthentication npa = new NamePasswordAuthentication();
-         npa.setUsername("root");
-         npa.setPassword(vmInitPassword);
-         GuestProgramSpec gps = new GuestProgramSpec();
-         gps.programPath = "/bin/sh";
-         gps.arguments = "-c \"service network restart\"";
-         List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin", "SHELL=/bin/bash");
-         gps.setEnvVariables(env.toArray(new String[env.size()]));
-         GuestProcessManager gpm = gom.getProcessManager(vm);
-         final long pid = gpm.startProgramInGuest(npa, gps);
-         Predicates2.retry(new Predicate<GuestProcessManager>() {
-            @Override
-            public boolean apply(GuestProcessManager o) {
-               try {
-                  GuestProcessInfo[] guestProcessInfos = o.listProcessesInGuest(npa, new long[]{pid});
-                  return guestProcessInfos == null || guestProcessInfos.length == 0;
-               } catch (RemoteException e) {
-                  return false;
-               }
-
+               updates.add(nicSpec);
             }
-         }, 20 * 1000, 1000, TimeUnit.MILLISECONDS).apply(gpm);
+         }
+
+         if (updates.size() == 0)
+            return;
+
+         VirtualMachineConfigSpec spec = new VirtualMachineConfigSpec();
+         spec.setDeviceChange(updates.toArray(new VirtualDeviceConfigSpec[updates.size()]));
+         Task task = vm.reconfigVM_Task(spec);
+         String result = task.waitForTask();
+         if (result.equals(Task.SUCCESS)) {
+            GuestOperationsManager gom = instance.getInstance().getGuestOperationsManager();
+            GuestAuthManager gam = gom.getAuthManager(vm);
+            final NamePasswordAuthentication npa = new NamePasswordAuthentication();
+            npa.setUsername("root");
+            npa.setPassword(vmInitPassword);
+            GuestProgramSpec gps = new GuestProgramSpec();
+            gps.programPath = "/bin/sh";
+            gps.arguments = "-c \"service network restart\"";
+            List<String> env = Lists.newArrayList("PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin", "SHELL=/bin/bash");
+            gps.setEnvVariables(env.toArray(new String[env.size()]));
+            GuestProcessManager gpm = gom.getProcessManager(vm);
+            final long pid = gpm.startProgramInGuest(npa, gps);
+            Predicates2.retry(new Predicate<GuestProcessManager>() {
+               @Override
+               public boolean apply(GuestProcessManager o) {
+                  try {
+                     GuestProcessInfo[] guestProcessInfos = o.listProcessesInGuest(npa, new long[]{pid});
+                     return guestProcessInfos == null || guestProcessInfos.length == 0;
+                  } catch (RemoteException e) {
+                     return false;
+                  }
+
+               }
+            }, 20 * 1000, 1000, TimeUnit.MILLISECONDS).apply(gpm);
+         }
+      } catch (Exception e) {
+         logger.warn("Got Exception while checking NIC status : " + e.toString());
       }
    }
 
